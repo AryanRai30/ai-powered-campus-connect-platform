@@ -1,1 +1,1 @@
-# ai-powered-college-connect-platform
+# ai-powered-campus-connect-platform

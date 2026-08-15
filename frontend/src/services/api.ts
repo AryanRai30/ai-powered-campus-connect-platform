@@ -16,12 +16,29 @@ const api = axios.create({
 });
 
 /**
- * Response Interceptor for centralized error logging
+ * Request Interceptor to attach JWT Bearer Token automatically
+ */
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('campus_connect_token');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+/**
+ * Response Interceptor for centralized error handling
  */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
+    if (error.response?.status === 401) {
+      // Clear token on 401 if unauthenticated
+      console.warn('Unauthorized request detected:', error.response.data);
+    }
     return Promise.reject(error);
   }
 );

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -47,12 +48,22 @@ export const DashboardPage: React.FC = () => {
           <p className="text-slate-400 text-sm">{user?.email}</p>
         </div>
 
-        <button
-          onClick={logout}
-          className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-sm font-semibold transition-colors self-start md:self-auto"
-        >
-          Sign Out
-        </button>
+        <div className="flex items-center space-x-3 self-start md:self-auto">
+          <Link
+            to="/student-profile"
+            className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-emerald-500/20 flex items-center space-x-2"
+          >
+            <span>Student Profile</span>
+            <span>→</span>
+          </Link>
+
+          <button
+            onClick={logout}
+            className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-sm font-semibold transition-colors"
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
 
       {/* User Information & Roles Card */}

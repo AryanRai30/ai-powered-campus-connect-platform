@@ -23,7 +23,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             </span>
           </Link>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             {isAuthenticated ? (
               <>
                 <Link
@@ -31,6 +31,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   className="text-xs font-semibold px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition-colors"
                 >
                   Dashboard ({user?.firstName})
+                </Link>
+                <Link
+                  to="/student-profile"
+                  className="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/20 transition-colors"
+                >
+                  Student Profile
                 </Link>
                 <button
                   onClick={logout}

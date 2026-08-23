@@ -73,6 +73,9 @@ public class User {
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private StudentProfile studentProfile;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

@@ -66,6 +66,89 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Campus Features Quick Access Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <Link
+          to="/events"
+          className="p-5 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl space-y-3 transition-all hover:shadow-xl group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-base font-bold">
+              📅
+            </div>
+            <span className="text-xs font-semibold text-emerald-400 group-hover:translate-x-1 transition-transform">
+              →
+            </span>
+          </div>
+          <h2 className="text-base font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">
+            Events
+          </h2>
+          <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+            Browse workshops, hackathons & register.
+          </p>
+        </Link>
+
+        <Link
+          to="/announcements"
+          className="p-5 bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl space-y-3 transition-all hover:shadow-xl group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-base font-bold">
+              📢
+            </div>
+            <span className="text-xs font-semibold text-indigo-400 group-hover:translate-x-1 transition-transform">
+              →
+            </span>
+          </div>
+          <h2 className="text-base font-bold text-slate-100 group-hover:text-indigo-400 transition-colors">
+            Bulletins
+          </h2>
+          <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+            Academic notices, circulars & exam timetables.
+          </p>
+        </Link>
+
+        <Link
+          to="/clubs"
+          className="p-5 bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-2xl space-y-3 transition-all hover:shadow-xl group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-base font-bold">
+              🤝
+            </div>
+            <span className="text-xs font-semibold text-purple-400 group-hover:translate-x-1 transition-transform">
+              →
+            </span>
+          </div>
+          <h2 className="text-base font-bold text-slate-100 group-hover:text-purple-400 transition-colors">
+            Clubs
+          </h2>
+          <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+            Join tech, arts, sports & entrepreneur societies.
+          </p>
+        </Link>
+
+        <Link
+          to="/resources"
+          className="p-5 bg-slate-900 border border-slate-800 hover:border-cyan-500/50 rounded-2xl space-y-3 transition-all hover:shadow-xl group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center text-base font-bold">
+              📚
+            </div>
+            <span className="text-xs font-semibold text-cyan-400 group-hover:translate-x-1 transition-transform">
+              →
+            </span>
+          </div>
+          <h2 className="text-base font-bold text-slate-100 group-hover:text-cyan-400 transition-colors">
+            Resources
+          </h2>
+          <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+            Lecture notes, PDFs, videos & study material.
+          </p>
+        </Link>
+      </div>
+
       {/* User Information & Roles Card */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
@@ -119,37 +202,53 @@ export const DashboardPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           <button
             onClick={() => testEndpoint('/protected/test')}
             disabled={!!loadingEndpoint}
-            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
+            className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
           >
-            {loadingEndpoint === '/protected/test' ? 'Testing...' : 'Test Protected API'}
+            {loadingEndpoint === '/protected/test' ? 'Testing...' : 'Test Auth'}
           </button>
 
           <button
-            onClick={() => testEndpoint('/protected/student')}
+            onClick={() => testEndpoint('/events')}
             disabled={!!loadingEndpoint}
-            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
+            className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
           >
-            {loadingEndpoint === '/protected/student' ? 'Testing...' : 'Test Student API'}
+            {loadingEndpoint === '/events' ? 'Testing...' : 'Test Events'}
           </button>
 
           <button
-            onClick={() => testEndpoint('/protected/faculty')}
+            onClick={() => testEndpoint('/announcements')}
             disabled={!!loadingEndpoint}
-            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
+            className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
           >
-            {loadingEndpoint === '/protected/faculty' ? 'Testing...' : 'Test Faculty API'}
+            {loadingEndpoint === '/announcements' ? 'Testing...' : 'Test Notices'}
+          </button>
+
+          <button
+            onClick={() => testEndpoint('/clubs')}
+            disabled={!!loadingEndpoint}
+            className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
+          >
+            {loadingEndpoint === '/clubs' ? 'Testing...' : 'Test Clubs'}
+          </button>
+
+          <button
+            onClick={() => testEndpoint('/resources')}
+            disabled={!!loadingEndpoint}
+            className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
+          >
+            {loadingEndpoint === '/resources' ? 'Testing...' : 'Test Resources'}
           </button>
 
           <button
             onClick={() => testEndpoint('/protected/admin')}
             disabled={!!loadingEndpoint}
-            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
+            className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
           >
-            {loadingEndpoint === '/protected/admin' ? 'Testing...' : 'Test Admin API'}
+            {loadingEndpoint === '/protected/admin' ? 'Testing...' : 'Test Admin'}
           </button>
         </div>
 

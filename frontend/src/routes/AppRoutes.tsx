@@ -6,6 +6,11 @@ import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import DashboardPage from '../pages/DashboardPage';
 import StudentProfilePage from '../pages/StudentProfilePage';
+import EventsPage from '../pages/EventsPage';
+import AnnouncementsPage from '../pages/AnnouncementsPage';
+import ClubsPage from '../pages/ClubsPage';
+import MyClubsPage from '../pages/MyClubsPage';
+import ResourcesPage from '../pages/ResourcesPage';
 import ProtectedRoute from './ProtectedRoute';
 
 /**
@@ -31,6 +36,46 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <StudentProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+              <EventsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/announcements"
+          element={
+            <ProtectedRoute>
+              <AnnouncementsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/clubs"
+          element={
+            <ProtectedRoute>
+              <ClubsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-clubs"
+          element={
+            <ProtectedRoute>
+              <MyClubsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resources"
+          element={
+            <ProtectedRoute>
+              <ResourcesPage />
             </ProtectedRoute>
           }
         />

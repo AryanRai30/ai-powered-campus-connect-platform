@@ -25,13 +25,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const storedToken = localStorage.getItem('campus_connect_token');
       const storedUser = localStorage.getItem('campus_connect_user');
 
-      if (storedToken && storedUser) {
+      if (
+        storedToken &&
+        storedUser &&
+        storedToken !== 'undefined' &&
+        storedToken !== 'null' &&
+        storedToken.trim() !== ''
+      ) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+      } else {
+        logoutUser();
+        setToken(null);
+        setUser(null);
       }
     } catch (error) {
       console.error('Failed to restore authentication state:', error);
       logoutUser();
+      setToken(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }

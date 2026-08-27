@@ -4,11 +4,13 @@ import com.campusconnect.entity.AcademicResource;
 import com.campusconnect.entity.Announcement;
 import com.campusconnect.entity.Club;
 import com.campusconnect.entity.Event;
+import com.campusconnect.entity.Opportunity;
 import com.campusconnect.entity.Role;
 import com.campusconnect.repository.AcademicResourceRepository;
 import com.campusconnect.repository.AnnouncementRepository;
 import com.campusconnect.repository.ClubRepository;
 import com.campusconnect.repository.EventRepository;
+import com.campusconnect.repository.OpportunityRepository;
 import com.campusconnect.repository.RoleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +24,7 @@ import java.util.List;
 
 /**
  * Safely initializes essential seed roles, sample events, announcements, student clubs,
- * and academic resources if empty upon application startup.
+ * academic resources, and career opportunities if empty upon application startup.
  */
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -33,19 +35,22 @@ public class DataInitializer implements CommandLineRunner {
     private final AnnouncementRepository announcementRepository;
     private final ClubRepository clubRepository;
     private final AcademicResourceRepository resourceRepository;
+    private final OpportunityRepository opportunityRepository;
 
     public DataInitializer(
             RoleRepository roleRepository,
             EventRepository eventRepository,
             AnnouncementRepository announcementRepository,
             ClubRepository clubRepository,
-            AcademicResourceRepository resourceRepository
+            AcademicResourceRepository resourceRepository,
+            OpportunityRepository opportunityRepository
     ) {
         this.roleRepository = roleRepository;
         this.eventRepository = eventRepository;
         this.announcementRepository = announcementRepository;
         this.clubRepository = clubRepository;
         this.resourceRepository = resourceRepository;
+        this.opportunityRepository = opportunityRepository;
     }
 
     @Override
@@ -55,6 +60,7 @@ public class DataInitializer implements CommandLineRunner {
         seedAnnouncements();
         seedClubs();
         seedAcademicResources();
+        seedOpportunities();
     }
 
     private void seedRoles() {
@@ -295,6 +301,85 @@ public class DataInitializer implements CommandLineRunner {
             }
         } catch (Exception e) {
             logger.warn("DataInitializer skipped academic resource seeding: {}", e.getMessage());
+        }
+    }
+
+    private void seedOpportunities() {
+        try {
+            if (opportunityRepository.count() == 0) {
+                List<Opportunity> sampleOpportunities = List.of(
+                    Opportunity.builder()
+                        .title("Software Development Engineer Intern")
+                        .description("Opportunity to build scalable microservices and RESTful APIs using Java 21 and Spring Boot. Mentorship from senior engineers included.")
+                        .organization("TechCorp Systems")
+                        .opportunityType("INTERNSHIP")
+                        .location("Remote / Bangalore")
+                        .skills("Java, Spring Boot, MySQL, REST APIs")
+                        .deadline(LocalDate.now().plusDays(30))
+                        .applicationUrl("https://example.com/careers/sde-intern")
+                        .build(),
+
+                    Opportunity.builder()
+                        .title("Java Backend Developer Intern")
+                        .description("Work with high-throughput database systems, security filters, and microservice architectures.")
+                        .organization("Nexus Innovations")
+                        .opportunityType("INTERNSHIP")
+                        .location("Hybrid / Hyderabad")
+                        .skills("Java, JPA/Hibernate, Microservices, Git")
+                        .deadline(LocalDate.now().plusDays(20))
+                        .applicationUrl("https://example.com/careers/java-intern")
+                        .build(),
+
+                    Opportunity.builder()
+                        .title("Full-Stack Web Developer Trainee")
+                        .description("Build modern user interfaces with React, TypeScript, and Tailwind CSS while connecting to Node/Java backends.")
+                        .organization("CloudScale Solutions")
+                        .opportunityType("JOB")
+                        .location("On-site / Pune")
+                        .skills("TypeScript, React, Node.js, Tailwind CSS")
+                        .deadline(LocalDate.now().plusDays(45))
+                        .applicationUrl("https://example.com/careers/fullstack-trainee")
+                        .build(),
+
+                    Opportunity.builder()
+                        .title("National Student Coding Competition 2026")
+                        .description("Participate in algorithmic problem solving and speed programming challenges. Cash prizes, certificates, and direct interview waivers.")
+                        .organization("ACM Student Chapter")
+                        .opportunityType("COMPETITION")
+                        .location("Virtual / Online")
+                        .skills("Data Structures, Algorithms, C++, Python")
+                        .deadline(LocalDate.now().plusDays(14))
+                        .applicationUrl("https://example.com/competitions/code-2026")
+                        .build(),
+
+                    Opportunity.builder()
+                        .title("Campus Student Innovation Challenge")
+                        .description("Grant scholarship and seed capital for promising tech, hardware, and social impact student startups.")
+                        .organization("University Innovation Council")
+                        .opportunityType("SCHOLARSHIP")
+                        .location("Main Campus")
+                        .skills("Prototyping, Business Pitching, Innovation")
+                        .deadline(LocalDate.now().plusDays(25))
+                        .applicationUrl("https://example.com/scholarships/innovation-grant")
+                        .build(),
+
+                    Opportunity.builder()
+                        .title("Technical Interview & Portfolio Workshop")
+                        .description("Interactive hands-on bootcamp covering live coding techniques, mock interviews, system design basics, and LinkedIn profile reviews.")
+                        .organization("Career Guidance Cell")
+                        .opportunityType("WORKSHOP")
+                        .location("Seminar Hall A")
+                        .skills("System Design, Mock Interviews, Resume Optimization")
+                        .deadline(LocalDate.now().plusDays(7))
+                        .applicationUrl("https://example.com/workshops/interview-prep")
+                        .build()
+                );
+
+                opportunityRepository.saveAll(sampleOpportunities);
+                logger.info("Initialized {} sample career opportunities.", sampleOpportunities.size());
+            }
+        } catch (Exception e) {
+            logger.warn("DataInitializer skipped opportunity seeding: {}", e.getMessage());
         }
     }
 }

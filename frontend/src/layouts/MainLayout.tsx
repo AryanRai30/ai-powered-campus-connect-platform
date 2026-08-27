@@ -14,7 +14,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       {/* App Header */}
       <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-5">
             <Link to="/" className="flex items-center space-x-3 hover:opacity-90 transition-opacity">
               <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950">
                 CC
@@ -25,30 +25,36 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             </Link>
 
             {isAuthenticated && (
-              <nav className="hidden md:flex items-center space-x-2">
+              <nav className="hidden lg:flex items-center space-x-1">
                 <Link
                   to="/events"
-                  className="text-xs font-semibold px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                  className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
                 >
                   📅 Events
                 </Link>
                 <Link
                   to="/announcements"
-                  className="text-xs font-semibold px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                  className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
                 >
-                  📢 Announcements
+                  📢 Bulletins
                 </Link>
                 <Link
                   to="/clubs"
-                  className="text-xs font-semibold px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                  className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
                 >
                   🤝 Clubs
                 </Link>
                 <Link
                   to="/resources"
-                  className="text-xs font-semibold px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                  className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
                 >
                   📚 Resources
+                </Link>
+                <Link
+                  to="/opportunities"
+                  className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-amber-400 hover:text-amber-300 rounded-lg transition-colors"
+                >
+                  💼 Opportunities
                 </Link>
               </nav>
             )}
@@ -64,10 +70,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   Dashboard ({user?.firstName})
                 </Link>
                 <Link
-                  to="/resources"
-                  className="md:hidden text-xs font-semibold px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition-colors"
+                  to="/my-opportunities"
+                  className="hidden sm:inline-block text-xs font-semibold px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/20 transition-colors"
                 >
-                  Resources
+                  My Opportunities
                 </Link>
                 <Link
                   to="/student-profile"

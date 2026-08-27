@@ -11,6 +11,8 @@ import AnnouncementsPage from '../pages/AnnouncementsPage';
 import ClubsPage from '../pages/ClubsPage';
 import MyClubsPage from '../pages/MyClubsPage';
 import ResourcesPage from '../pages/ResourcesPage';
+import OpportunitiesPage from '../pages/OpportunitiesPage';
+import MyOpportunitiesPage from '../pages/MyOpportunitiesPage';
 import ProtectedRoute from './ProtectedRoute';
 
 /**
@@ -76,6 +78,22 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <ResourcesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/opportunities"
+          element={
+            <ProtectedRoute>
+              <OpportunitiesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-opportunities"
+          element={
+            <ProtectedRoute>
+              <MyOpportunitiesPage />
             </ProtectedRoute>
           }
         />

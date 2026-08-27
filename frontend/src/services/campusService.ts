@@ -5,7 +5,10 @@ import {
   AnnouncementItem,
   ClubItem,
   ClubMembershipStatus,
-  AcademicResourceItem
+  AcademicResourceItem,
+  OpportunityItem,
+  OpportunityBookmarkStatus,
+  OpportunityApplicationStatus
 } from '../types/campus.types';
 
 /**
@@ -105,5 +108,47 @@ export const fetchAcademicResources = async (
 
 export const fetchAcademicResourceById = async (id: number): Promise<AcademicResourceItem> => {
   const response = await api.get<AcademicResourceItem>(`/resources/${id}`);
+  return response.data;
+};
+
+/**
+ * Service for Opportunities & Career Support API calls
+ */
+export const fetchOpportunities = async (
+  opportunityType?: string,
+  location?: string,
+  search?: string
+): Promise<OpportunityItem[]> => {
+  const params: Record<string, string> = {};
+  if (opportunityType && opportunityType !== 'All') params.opportunityType = opportunityType;
+  if (location && location !== 'All') params.location = location;
+  if (search) params.search = search;
+
+  const response = await api.get<OpportunityItem[]>('/opportunities', { params });
+  return response.data;
+};
+
+export const fetchMyBookmarks = async (): Promise<OpportunityItem[]> => {
+  const response = await api.get<OpportunityItem[]>('/opportunities/my-bookmarks');
+  return response.data;
+};
+
+export const fetchMyApplications = async (): Promise<OpportunityItem[]> => {
+  const response = await api.get<OpportunityItem[]>('/opportunities/my-applications');
+  return response.data;
+};
+
+export const fetchOpportunityById = async (id: number): Promise<OpportunityItem> => {
+  const response = await api.get<OpportunityItem>(`/opportunities/${id}`);
+  return response.data;
+};
+
+export const bookmarkOpportunity = async (opportunityId: number): Promise<OpportunityBookmarkStatus> => {
+  const response = await api.post<OpportunityBookmarkStatus>(`/opportunities/${opportunityId}/bookmark`);
+  return response.data;
+};
+
+export const applyForOpportunity = async (opportunityId: number): Promise<OpportunityApplicationStatus> => {
+  const response = await api.post<OpportunityApplicationStatus>(`/opportunities/${opportunityId}/apply`);
   return response.data;
 };

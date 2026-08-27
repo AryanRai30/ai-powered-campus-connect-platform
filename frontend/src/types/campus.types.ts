@@ -62,3 +62,33 @@ export interface AcademicResourceItem {
   createdAt: string;
   updatedAt?: string;
 }
+
+export interface OpportunityItem {
+  id: number;
+  title: string;
+  description: string;
+  organization: string;
+  opportunityType?: string; // INTERNSHIP, JOB, SCHOLARSHIP, COMPETITION, WORKSHOP, OTHER
+  location?: string;
+  skills?: string;
+  deadline?: string;
+  applicationUrl?: string;
+  bookmarked: boolean;
+  applied: boolean;
+  applicationStatus?: string; // APPLIED, INTERVIEW, SELECTED, REJECTED
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface OpportunityBookmarkStatus {
+  opportunityId: number;
+  bookmarked: boolean;
+  bookmarkedAt?: string;
+}
+
+export interface OpportunityApplicationStatus {
+  opportunityId: number;
+  applied: boolean;
+  status: string;
+  appliedAt?: string;
+}

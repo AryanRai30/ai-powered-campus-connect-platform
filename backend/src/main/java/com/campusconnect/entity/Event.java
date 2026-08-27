@@ -60,6 +60,29 @@ public class Event {
     @Column(name = "registration_required", nullable = false)
     private boolean registrationRequired = false;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+
+    @Builder.Default
+    @Column(name = "published", nullable = false)
+    private Boolean published = true;
+
+    @Builder.Default
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
+
+    @Size(max = 100)
+    @Column(name = "target_department", length = 100)
+    private String targetDepartment;
+
+    @Size(max = 100)
+    @Column(name = "target_course", length = 100)
+    private String targetCourse;
+
+    @Column(name = "target_year")
+    private Integer targetYear;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -70,6 +93,12 @@ public class Event {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        if (this.published == null) {
+            this.published = true;
+        }
+        if (this.active == null) {
+            this.active = true;
+        }
     }
 
     @PreUpdate

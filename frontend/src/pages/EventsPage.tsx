@@ -158,10 +158,10 @@ export const EventsPage: React.FC = () => {
         </div>
       ) : events.length === 0 ? (
         <div className="p-12 bg-slate-900/50 border border-slate-800 rounded-3xl text-center space-y-3">
-          <div className="text-4xl">🎪</div>
-          <h3 className="text-lg font-semibold text-slate-300">No events found</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            No events match your current filter or search criteria. Try selecting another category or clearing your search query.
+          <div className="text-4xl">📅</div>
+          <h3 className="text-lg font-semibold text-slate-300">No upcoming events</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            New campus events will appear here when they are published.
           </p>
           {(selectedCategory !== 'All' || searchQuery) && (
             <button

@@ -18,3 +18,22 @@ export const logoutUser = (): void => {
   localStorage.removeItem('campus_connect_token');
   localStorage.removeItem('campus_connect_user');
 };
+
+/**
+ * Helper utility to safely inspect client-side JWT expiration claim ('exp').
+ */
+export const isTokenExpired = (token: string): boolean => {
+  if (!token || token.trim() === '' || token === 'undefined' || token === 'null') {
+    return true;
+  }
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return true;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload || !payload.exp) return false;
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    return payload.exp <= nowInSeconds;
+  } catch (e) {
+    return true;
+  }
+};

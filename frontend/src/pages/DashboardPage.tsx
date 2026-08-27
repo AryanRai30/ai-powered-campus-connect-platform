@@ -18,7 +18,6 @@ import {
   ClubItem,
   AcademicResourceItem,
 } from '../types/campus.types';
-import api from '../services/api';
 
 export const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -51,11 +50,6 @@ export const DashboardPage: React.FC = () => {
   });
   const [oppLoading, setOppLoading] = useState<boolean>(true);
   const [oppError, setOppError] = useState<string | null>(null);
-
-  // Developer API Verification Drawer State
-  const [apiResponse, setApiResponse] = useState<string | null>(null);
-  const [apiStatus, setApiStatus] = useState<number | null>(null);
-  const [loadingEndpoint, setLoadingEndpoint] = useState<string | null>(null);
 
   // Calculate dynamic profile completion percentage
   const calculateProfileCompletion = (prof: StudentProfileResponse | null): number => {
@@ -176,27 +170,6 @@ export const DashboardPage: React.FC = () => {
     loadResources();
     loadOpportunitiesStats();
   }, []);
-
-  const testEndpoint = async (endpoint: string) => {
-    setLoadingEndpoint(endpoint);
-    setApiResponse(null);
-    setApiStatus(null);
-    try {
-      const res = await api.get(endpoint);
-      setApiStatus(res.status);
-      setApiResponse(JSON.stringify(res.data, null, 2));
-    } catch (err: any) {
-      if (err.response) {
-        setApiStatus(err.response.status);
-        setApiResponse(JSON.stringify(err.response.data, null, 2));
-      } else {
-        setApiStatus(500);
-        setApiResponse(err.message || 'Network error');
-      }
-    } finally {
-      setLoadingEndpoint(null);
-    }
-  };
 
   const profileCompletion = calculateProfileCompletion(profile);
 
@@ -387,7 +360,7 @@ export const DashboardPage: React.FC = () => {
             ) : eventsError ? (
               <p className="text-xs text-red-400">{eventsError}</p>
             ) : events.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">No upcoming events available.</p>
+              <p className="text-xs text-slate-400 italic">No upcoming events have been published yet.</p>
             ) : (
               <div className="space-y-3">
                 {events.map((ev) => (
@@ -430,7 +403,7 @@ export const DashboardPage: React.FC = () => {
             ) : announcementsError ? (
               <p className="text-xs text-red-400">{announcementsError}</p>
             ) : announcements.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">No announcements available.</p>
+              <p className="text-xs text-slate-400 italic">No announcements have been published yet.</p>
             ) : (
               <div className="space-y-3">
                 {announcements.map((anc) => (
@@ -476,7 +449,7 @@ export const DashboardPage: React.FC = () => {
               <p className="text-xs text-red-400">{clubsError}</p>
             ) : myClubs.length === 0 ? (
               <div className="space-y-2">
-                <p className="text-xs text-slate-400 italic">You haven't joined any clubs yet.</p>
+                <p className="text-xs text-slate-400 italic">No clubs joined yet.</p>
                 <Link
                   to="/clubs"
                   className="inline-block px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 text-xs font-semibold rounded-lg transition-colors"
@@ -523,7 +496,7 @@ export const DashboardPage: React.FC = () => {
             ) : resourcesError ? (
               <p className="text-xs text-red-400">{resourcesError}</p>
             ) : resources.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">No academic resources available.</p>
+              <p className="text-xs text-slate-400 italic">No academic resources available yet.</p>
             ) : (
               <div className="space-y-2">
                 {resources.map((res) => (
@@ -590,104 +563,6 @@ export const DashboardPage: React.FC = () => {
               <span className="text-slate-400 text-xs font-semibold block">Tracked Applications</span>
               <span className="text-2xl font-extrabold text-emerald-400">{oppStats.applied}</span>
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* Developer Backend API Verification Drawer */}
-      <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-6">
-        <div>
-          <h2 className="text-base font-semibold text-slate-200">
-            Protected Backend API Verification
-          </h2>
-          <p className="text-slate-400 text-xs mt-0.5">
-            Test real-time stateless JWT authorization against Spring Boot security endpoints.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          <button
-            onClick={() => testEndpoint('/events')}
-            disabled={!!loadingEndpoint}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
-          >
-            {loadingEndpoint === '/events' ? 'Testing...' : 'Test Events'}
-          </button>
-
-          <button
-            onClick={() => testEndpoint('/clubs')}
-            disabled={!!loadingEndpoint}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
-          >
-            {loadingEndpoint === '/clubs' ? 'Testing...' : 'Test Clubs'}
-          </button>
-
-          <button
-            onClick={() => testEndpoint('/resources')}
-            disabled={!!loadingEndpoint}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
-          >
-            {loadingEndpoint === '/resources' ? 'Testing...' : 'Test Resources'}
-          </button>
-
-          <button
-            onClick={() => testEndpoint('/opportunities')}
-            disabled={!!loadingEndpoint}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
-          >
-            {loadingEndpoint === '/opportunities' ? 'Testing...' : 'Test Opportunities'}
-          </button>
-
-          <button
-            onClick={() => testEndpoint('/opportunities/my-bookmarks')}
-            disabled={!!loadingEndpoint}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
-          >
-            {loadingEndpoint === '/opportunities/my-bookmarks' ? 'Testing...' : 'Test Bookmarks'}
-          </button>
-
-          <button
-            onClick={() => testEndpoint('/opportunities/my-applications')}
-            disabled={!!loadingEndpoint}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
-          >
-            {loadingEndpoint === '/opportunities/my-applications' ? 'Testing...' : 'Test Applications'}
-          </button>
-
-          <button
-            onClick={() => testEndpoint('/protected/student')}
-            disabled={!!loadingEndpoint}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
-          >
-            {loadingEndpoint === '/protected/student' ? 'Testing...' : 'Test Student Role'}
-          </button>
-
-          <button
-            onClick={() => testEndpoint('/protected/admin')}
-            disabled={!!loadingEndpoint}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors disabled:opacity-50"
-          >
-            {loadingEndpoint === '/protected/admin' ? 'Testing...' : 'Test Admin Role'}
-          </button>
-        </div>
-
-        {apiResponse && (
-          <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-400">Response Status:</span>
-              <span
-                className={`font-bold px-2 py-0.5 rounded ${
-                  apiStatus === 200
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                    : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                }`}
-              >
-                HTTP {apiStatus}
-              </span>
-            </div>
-            <pre className="p-3 bg-slate-900 rounded-lg text-emerald-400 text-xs font-mono overflow-x-auto">
-              {apiResponse}
-            </pre>
           </div>
         )}
       </div>

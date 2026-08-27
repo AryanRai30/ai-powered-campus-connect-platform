@@ -56,7 +56,7 @@ public class OpportunityIntegrationTest {
                 .location("Remote")
                 .skills("AWS, Docker, Linux")
                 .deadline(LocalDate.now().plusDays(15))
-                .applicationUrl("https://example.com/careers/cloud-intern")
+                .applicationUrl("https://careers.microsoft.com/")
                 .build());
     }
 

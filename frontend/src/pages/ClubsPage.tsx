@@ -168,10 +168,10 @@ export const ClubsPage: React.FC = () => {
         </div>
       ) : clubs.length === 0 ? (
         <div className="p-12 bg-slate-900/50 border border-slate-800 rounded-3xl text-center space-y-3">
-          <div className="text-4xl">👥</div>
-          <h3 className="text-lg font-semibold text-slate-300">No clubs found</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            No student clubs match your current search or category filter. Try clearing your filters.
+          <div className="text-4xl">🏫</div>
+          <h3 className="text-lg font-semibold text-slate-300">No clubs available</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Campus clubs will appear here when they are published.
           </p>
           {(selectedCategory !== 'All' || searchQuery) && (
             <button

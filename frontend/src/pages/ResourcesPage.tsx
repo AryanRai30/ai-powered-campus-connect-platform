@@ -41,8 +41,22 @@ export const ResourcesPage: React.FC = () => {
     loadResources(selectedCategory, selectedType, searchQuery);
   };
 
+  const isValidExternalUrl = (url?: string): boolean => {
+    if (!url || !url.trim()) return false;
+    const lower = url.trim().toLowerCase();
+    if (
+      lower.includes('example.com') ||
+      lower.includes('example.org') ||
+      lower.includes('example.net') ||
+      lower.includes('placeholder')
+    ) {
+      return false;
+    }
+    return lower.startsWith('http://') || lower.startsWith('https://');
+  };
+
   const handleOpenLink = (url?: string) => {
-    if (!url) return;
+    if (!url || !isValidExternalUrl(url)) return;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -156,10 +170,10 @@ export const ResourcesPage: React.FC = () => {
         </div>
       ) : resources.length === 0 ? (
         <div className="p-12 bg-slate-900/50 border border-slate-800 rounded-3xl text-center space-y-3">
-          <div className="text-4xl">📖</div>
-          <h3 className="text-lg font-semibold text-slate-300">No resources found</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            No study materials match your current filter or search query. Try clearing your search parameters.
+          <div className="text-4xl">📚</div>
+          <h3 className="text-lg font-semibold text-slate-300">No academic resources available yet</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Faculty resources will appear here when they are published.
           </p>
           {(selectedCategory !== 'All' || selectedType !== 'All' || searchQuery) && (
             <button
@@ -216,7 +230,7 @@ export const ResourcesPage: React.FC = () => {
                   View Details →
                 </button>
 
-                {res.resourceUrl ? (
+                {isValidExternalUrl(res.resourceUrl) ? (
                   <button
                     onClick={() => handleOpenLink(res.resourceUrl)}
                     className="px-3.5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-md shadow-cyan-500/20 flex items-center space-x-1"
@@ -225,7 +239,9 @@ export const ResourcesPage: React.FC = () => {
                     <span>↗</span>
                   </button>
                 ) : (
-                  <span className="text-xs text-slate-600 italic">No direct URL</span>
+                  <span className="px-3 py-1.5 bg-slate-800/60 text-slate-500 border border-slate-800 text-xs rounded-xl font-medium italic">
+                    Link unavailable
+                  </span>
                 )}
               </div>
             </div>
@@ -265,12 +281,14 @@ export const ResourcesPage: React.FC = () => {
                 <span className="text-slate-500 block">Resource Format</span>
                 <span className="text-slate-200 font-semibold">{selectedResource.resourceType || 'Standard'}</span>
               </div>
-              {selectedResource.resourceUrl && (
-                <div className="col-span-2">
-                  <span className="text-slate-500 block">Resource Link</span>
+              <div className="col-span-2">
+                <span className="text-slate-500 block">Resource Link</span>
+                {isValidExternalUrl(selectedResource.resourceUrl) ? (
                   <span className="text-cyan-400 font-mono font-medium truncate block">{selectedResource.resourceUrl}</span>
-                </div>
-              )}
+                ) : (
+                  <span className="text-slate-500 font-mono font-medium italic block">Link unavailable</span>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -288,13 +306,20 @@ export const ResourcesPage: React.FC = () => {
                 Close
               </button>
 
-              {selectedResource.resourceUrl && (
+              {isValidExternalUrl(selectedResource.resourceUrl) ? (
                 <button
                   onClick={() => handleOpenLink(selectedResource.resourceUrl)}
                   className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center space-x-1"
                 >
                   <span>Open Resource</span>
                   <span>↗</span>
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className="px-5 py-2.5 bg-slate-800 text-slate-500 border border-slate-700 text-xs font-semibold rounded-xl cursor-not-allowed italic"
+                >
+                  Link unavailable
                 </button>
               )}
             </div>

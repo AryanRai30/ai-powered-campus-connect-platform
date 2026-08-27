@@ -27,6 +27,17 @@ public class JwtService {
     @Value("${app.jwt.expiration:86400000}")
     private long jwtExpiration;
 
+    /**
+     * Resolves the effective JWT expiration duration in milliseconds.
+     * Safely handles configurations specified in seconds (e.g. 3600 or 86400).
+     */
+    public long getEffectiveJwtExpirationInMs() {
+        if (jwtExpiration > 0 && jwtExpiration <= 604800L) { // 7 days or less in seconds
+            return jwtExpiration * 1000L;
+        }
+        return jwtExpiration > 0 ? jwtExpiration : 86400000L; // Default 24 hours (86,400,000 ms)
+    }
+
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -41,23 +52,23 @@ public class JwtService {
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return buildToken(extraClaims, userDetails, jwtExpiration);
+        return buildToken(extraClaims, userDetails, getEffectiveJwtExpirationInMs());
     }
 
-    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expirationMs) {
         long nowMillis = System.currentTimeMillis();
         return Jwts.builder()
                 .claims(extraClaims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(nowMillis))
-                .expiration(new Date(nowMillis + expiration))
+                .expiration(new Date(nowMillis + expirationMs))
                 .signWith(getSignInKey())
                 .compact();
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        return (username.equalsIgnoreCase(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {

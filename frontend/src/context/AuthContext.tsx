@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthenticatedUser, AuthResponse, LoginRequest, RegisterRequest } from '../types/auth.types';
-import { loginUser, registerUser, logoutUser } from '../services/authService';
+import { loginUser, registerUser, logoutUser, isTokenExpired } from '../services/authService';
 
 interface AuthContextType {
   user: AuthenticatedUser | null;
@@ -28,9 +28,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (
         storedToken &&
         storedUser &&
-        storedToken !== 'undefined' &&
-        storedToken !== 'null' &&
-        storedToken.trim() !== ''
+        !isTokenExpired(storedToken)
       ) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));

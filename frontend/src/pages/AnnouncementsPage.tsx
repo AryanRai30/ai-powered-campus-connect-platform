@@ -146,10 +146,10 @@ export const AnnouncementsPage: React.FC = () => {
         </div>
       ) : announcements.length === 0 ? (
         <div className="p-12 bg-slate-900/50 border border-slate-800 rounded-3xl text-center space-y-3">
-          <div className="text-4xl">📭</div>
-          <h3 className="text-lg font-semibold text-slate-300">No announcements found</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            There are currently no announcements under this category.
+          <div className="text-4xl">📢</div>
+          <h3 className="text-lg font-semibold text-slate-300">No announcements available</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Official campus announcements will appear here.
           </p>
           {(selectedCategory !== 'All' || searchQuery) && (
             <button

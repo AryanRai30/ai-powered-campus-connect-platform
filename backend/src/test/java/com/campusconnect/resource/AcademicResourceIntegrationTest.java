@@ -35,7 +35,7 @@ public class AcademicResourceIntegrationTest {
                 .subject("Compiler Design")
                 .category("Computer Science")
                 .resourceType("NOTES")
-                .resourceUrl("https://example.com/resources/compiler-notes.pdf")
+                .resourceUrl("https://docs.oracle.com/en/java/")
                 .build());
     }
 
@@ -70,6 +70,6 @@ public class AcademicResourceIntegrationTest {
 
         assertThat(single).isNotNull();
         assertThat(single.getId()).isEqualTo(testResource.getId());
-        assertThat(single.getResourceUrl()).isEqualTo("https://example.com/resources/compiler-notes.pdf");
+        assertThat(single.getResourceUrl()).isEqualTo("https://docs.oracle.com/en/java/");
     }
 }

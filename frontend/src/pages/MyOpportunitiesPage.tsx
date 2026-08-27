@@ -32,8 +32,22 @@ export const MyOpportunitiesPage: React.FC = () => {
     loadData();
   }, []);
 
+  const isValidExternalUrl = (url?: string): boolean => {
+    if (!url || !url.trim()) return false;
+    const lower = url.trim().toLowerCase();
+    if (
+      lower.includes('example.com') ||
+      lower.includes('example.org') ||
+      lower.includes('example.net') ||
+      lower.includes('placeholder')
+    ) {
+      return false;
+    }
+    return lower.startsWith('http://') || lower.startsWith('https://');
+  };
+
   const handleOpenLink = (url?: string) => {
-    if (!url) return;
+    if (!url || !isValidExternalUrl(url)) return;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -184,7 +198,7 @@ export const MyOpportunitiesPage: React.FC = () => {
                     View in Catalog →
                   </Link>
 
-                  {opp.applicationUrl && (
+                  {isValidExternalUrl(opp.applicationUrl) ? (
                     <button
                       onClick={() => handleOpenLink(opp.applicationUrl)}
                       className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center space-x-1"
@@ -192,6 +206,10 @@ export const MyOpportunitiesPage: React.FC = () => {
                       <span>Open Application</span>
                       <span>↗</span>
                     </button>
+                  ) : (
+                    <span className="px-3 py-1 bg-slate-800 text-slate-500 border border-slate-700 text-xs font-semibold rounded-xl italic">
+                      Link unavailable
+                    </span>
                   )}
                 </div>
               </div>
@@ -209,7 +227,7 @@ export const MyOpportunitiesPage: React.FC = () => {
             to="/opportunities"
             className="inline-block px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-500/20"
           >
-            Explore Opportunities
+            Browse Opportunities
           </Link>
         </div>
       ) : (
@@ -245,7 +263,7 @@ export const MyOpportunitiesPage: React.FC = () => {
               <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between">
                 <span className="text-xs text-emerald-400 font-semibold">✓ Tracked Application</span>
 
-                {opp.applicationUrl && (
+                {isValidExternalUrl(opp.applicationUrl) ? (
                   <button
                     onClick={() => handleOpenLink(opp.applicationUrl)}
                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition-all flex items-center space-x-1"
@@ -253,6 +271,10 @@ export const MyOpportunitiesPage: React.FC = () => {
                     <span>Re-open Link</span>
                     <span>↗</span>
                   </button>
+                ) : (
+                  <span className="px-3 py-1 bg-slate-800 text-slate-500 border border-slate-700 text-xs font-semibold rounded-xl italic">
+                    Link unavailable
+                  </span>
                 )}
               </div>
             </div>

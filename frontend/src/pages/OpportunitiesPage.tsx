@@ -56,24 +56,43 @@ export const OpportunitiesPage: React.FC = () => {
     }
   };
 
+  const isValidExternalUrl = (url?: string): boolean => {
+    if (!url || !url.trim()) return false;
+    const lower = url.trim().toLowerCase();
+    if (
+      lower.includes('example.com') ||
+      lower.includes('example.org') ||
+      lower.includes('example.net') ||
+      lower.includes('placeholder')
+    ) {
+      return false;
+    }
+    return lower.startsWith('http://') || lower.startsWith('https://');
+  };
+
   const handleApply = async (opp: OpportunityItem) => {
     setActionInProgress(opp.id);
     setToastMessage(null);
+    const hasValidLink = isValidExternalUrl(opp.applicationUrl);
     try {
       if (!opp.applied) {
         await applyForOpportunity(opp.id);
       }
-      setToastMessage({ text: 'Application tracked in My Opportunities!', type: 'success' });
+      setToastMessage({
+        text: hasValidLink
+          ? 'Application tracked! Opening application portal.'
+          : 'Application tracked! Note: External portal link is unavailable.',
+        type: 'success',
+      });
       await loadOpportunities(selectedType, searchQuery);
       if (selectedOpportunity && selectedOpportunity.id === opp.id) {
-        setSelectedOpportunity((prev) => prev ? { ...prev, applied: true, applicationStatus: 'APPLIED' } : null);
+        setSelectedOpportunity((prev) => (prev ? { ...prev, applied: true, applicationStatus: 'APPLIED' } : null));
       }
-      if (opp.applicationUrl) {
+      if (hasValidLink && opp.applicationUrl) {
         window.open(opp.applicationUrl, '_blank', 'noopener,noreferrer');
       }
     } catch (err: any) {
-      // If already applied, still allow opening external link
-      if (opp.applicationUrl) {
+      if (hasValidLink && opp.applicationUrl) {
         window.open(opp.applicationUrl, '_blank', 'noopener,noreferrer');
       } else {
         const msg = err.response?.data?.message || 'Application tracking failed.';
@@ -213,10 +232,10 @@ export const OpportunitiesPage: React.FC = () => {
         </div>
       ) : opportunities.length === 0 ? (
         <div className="p-12 bg-slate-900/50 border border-slate-800 rounded-3xl text-center space-y-3">
-          <div className="text-4xl">🚀</div>
-          <h3 className="text-lg font-semibold text-slate-300">No opportunities found</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            No active listings match your current filters or search query. Try clearing search filters.
+          <div className="text-4xl">💼</div>
+          <h3 className="text-lg font-semibold text-slate-300">No opportunities available</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            New internships, jobs, scholarships and competitions will appear here.
           </p>
           {(selectedType !== 'All' || searchQuery) && (
             <button

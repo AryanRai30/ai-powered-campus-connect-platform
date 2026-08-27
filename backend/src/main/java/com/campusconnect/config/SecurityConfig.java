@@ -63,6 +63,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/protected/student").hasRole("STUDENT")
                 .requestMatchers("/api/protected/faculty").hasRole("FACULTY")
                 .requestMatchers("/api/protected/admin").hasAnyRole("CLUB_ADMIN", "SUPER_ADMIN")
+                // Student Permitted Actions (Register, Join, Bookmark, Apply)
+                .requestMatchers(HttpMethod.POST, "/api/events/*/register", "/api/clubs/*/join", "/api/opportunities/*/bookmark", "/api/opportunities/*/apply").authenticated()
+                // Restrict creation of official campus content to Faculty/Admin
+                .requestMatchers(HttpMethod.POST, "/api/events", "/api/announcements", "/api/clubs", "/api/resources", "/api/opportunities").hasAnyRole("FACULTY", "CLUB_ADMIN", "SUPER_ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/events/**", "/api/announcements/**", "/api/clubs/**", "/api/resources/**", "/api/opportunities/**").hasAnyRole("FACULTY", "CLUB_ADMIN", "SUPER_ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/events/**", "/api/announcements/**", "/api/clubs/**", "/api/resources/**", "/api/opportunities/**").hasAnyRole("FACULTY", "CLUB_ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

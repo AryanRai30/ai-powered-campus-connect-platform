@@ -40,6 +40,32 @@ public class Announcement {
     @Column(name = "published_at", nullable = false)
     private LocalDateTime publishedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+
+    @Builder.Default
+    @Column(name = "published", nullable = false)
+    private Boolean published = true;
+
+    @Builder.Default
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
+
+    @Size(max = 100)
+    @Column(name = "target_department", length = 100)
+    private String targetDepartment;
+
+    @Size(max = 100)
+    @Column(name = "target_course", length = 100)
+    private String targetCourse;
+
+    @Column(name = "target_year")
+    private Integer targetYear;
+
+    @Column(name = "target_semester")
+    private Integer targetSemester;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -52,6 +78,12 @@ public class Announcement {
         this.updatedAt = LocalDateTime.now();
         if (this.publishedAt == null) {
             this.publishedAt = LocalDateTime.now();
+        }
+        if (this.published == null) {
+            this.published = true;
+        }
+        if (this.active == null) {
+            this.active = true;
         }
     }
 

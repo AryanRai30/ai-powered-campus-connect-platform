@@ -107,7 +107,7 @@ export const RegisterPage: React.FC = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="john.doe@example.com"
+            placeholder="john.doe@campusconnect.edu"
             required
             className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
           />

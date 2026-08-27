@@ -1,5 +1,6 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import MainLayout from '../layouts/MainLayout';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
@@ -15,6 +16,21 @@ import OpportunitiesPage from '../pages/OpportunitiesPage';
 import MyOpportunitiesPage from '../pages/MyOpportunitiesPage';
 import ProtectedRoute from './ProtectedRoute';
 
+const RootRedirect: React.FC = () => {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+  const roleNames = user.roles || [];
+  if (roleNames.includes('FACULTY')) {
+    return <Navigate to="/faculty/dashboard" replace />;
+  }
+  if (roleNames.includes('SUPER_ADMIN') || roleNames.includes('CLUB_ADMIN')) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  return <Navigate to="/dashboard" replace />;
+};
+
 /**
  * Main Routing Configuration
  */
@@ -22,7 +38,8 @@ export const AppRoutes: React.FC = () => {
   return (
     <MainLayout>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/dev/health" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route

@@ -53,6 +53,22 @@ public class Club {
     @Column(name = "meeting_venue", length = 150)
     private String meetingVenue;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by")
+    private User updatedBy;
+
+    @Builder.Default
+    @Column(name = "published", nullable = false)
+    private Boolean published = true;
+
+    @Builder.Default
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -63,6 +79,12 @@ public class Club {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        if (this.published == null) {
+            this.published = true;
+        }
+        if (this.active == null) {
+            this.active = true;
+        }
     }
 
     @PreUpdate

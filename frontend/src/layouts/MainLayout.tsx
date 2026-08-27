@@ -9,13 +9,21 @@ interface MainLayoutProps {
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { isAuthenticated, user, logout } = useAuth();
 
+  const getLogoDestination = (): string => {
+    if (!isAuthenticated || !user) return '/login';
+    const roleNames = user.roles || [];
+    if (roleNames.includes('FACULTY')) return '/faculty/dashboard';
+    if (roleNames.includes('SUPER_ADMIN') || roleNames.includes('CLUB_ADMIN')) return '/admin/dashboard';
+    return '/dashboard';
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       {/* App Header */}
       <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-5">
-            <Link to="/" className="flex items-center space-x-3 hover:opacity-90 transition-opacity">
+            <Link to={getLogoDestination()} className="flex items-center space-x-3 hover:opacity-90 transition-opacity">
               <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950">
                 CC
               </div>

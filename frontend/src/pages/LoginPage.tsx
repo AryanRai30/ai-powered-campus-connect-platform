@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,11 +8,17 @@ export const LoginPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login } = useAuth();
+  const { login, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, loading, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,74 +47,102 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto my-10 p-8 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
-      <div className="text-center mb-8">
-        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold text-xl mx-auto mb-3">
-          CC
+    <div className="w-full max-w-xl mx-auto py-8 sm:py-12 px-4 flex flex-col items-center">
+      {/* Hero / Branding Header */}
+      <div className="text-center mb-8 sm:mb-10 w-full space-y-3">
+        <div className="inline-flex items-center space-x-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+          <span className="text-xs font-semibold text-emerald-400 tracking-wide uppercase">
+            Campus Connect
+          </span>
         </div>
-        <h1 className="text-2xl font-bold text-slate-100">Welcome Back</h1>
-        <p className="text-slate-400 text-sm mt-1">Sign in to your Campus Connect account</p>
+        
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
+          Ai Powered Campus Connect <br className="hidden sm:inline" />
+          <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+            Platform
+          </span>
+        </h1>
+        
+        <p className="text-slate-400 text-sm sm:text-base md:text-lg max-w-md mx-auto">
+          Your Digital Campus Experience
+        </p>
       </div>
 
-      {errorMessage && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
-          {errorMessage}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            Email Address
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="student@campusconnect.edu"
-            required
-            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
-          />
+      {/* Login Card */}
+      <div className="w-full max-w-md bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-8">
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold text-xl mx-auto mb-3 shadow-inner">
+            CC
+          </div>
+          <h2 className="text-xl font-bold text-slate-100">Welcome Back</h2>
+          <p className="text-slate-400 text-xs sm:text-sm mt-1">
+            Sign in to your Campus Connect account
+          </p>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            Password
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
-          />
+        {errorMessage && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-start space-x-2">
+            <span className="font-bold">!</span>
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="student@campusconnect.edu"
+              required
+              className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 disabled:opacity-50 flex items-center justify-center space-x-2 cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
+                <span>Authenticating...</span>
+              </>
+            ) : (
+              <span>Sign In</span>
+            )}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center text-sm text-slate-400 border-t border-slate-800/80 pt-5">
+          Don't have an account?{' '}
+          <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-semibold underline transition-colors">
+            Register as Student
+          </Link>
         </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl transition-colors shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center space-x-2"
-        >
-          {isSubmitting ? (
-            <>
-              <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
-              <span>Authenticating...</span>
-            </>
-          ) : (
-            <span>Sign In</span>
-          )}
-        </button>
-      </form>
-
-      <div className="mt-8 text-center text-sm text-slate-400">
-        Don't have an account?{' '}
-        <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-medium underline">
-          Register as Student
-        </Link>
       </div>
     </div>
   );
 };
 
 export default LoginPage;
+

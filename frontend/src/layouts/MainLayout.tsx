@@ -7,7 +7,7 @@ interface MainLayoutProps {
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, loading, user, logout } = useAuth();
 
   const getLogoDestination = (): string => {
     if (!isAuthenticated || !user) return '/login';
@@ -24,7 +24,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-5">
             <Link to={getLogoDestination()} className="flex items-center space-x-3 hover:opacity-90 transition-opacity">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950 shadow-md shadow-emerald-500/20">
                 CC
               </div>
               <span className="font-semibold text-lg tracking-tight text-white">
@@ -32,7 +32,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </span>
             </Link>
 
-            {isAuthenticated && (
+            {!loading && isAuthenticated && (
               <nav className="hidden lg:flex items-center space-x-1">
                 <Link
                   to="/events"
@@ -69,7 +69,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </div>
 
           <div className="flex items-center space-x-3">
-            {isAuthenticated ? (
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
+            ) : isAuthenticated ? (
               <>
                 <Link
                   to="/dashboard"

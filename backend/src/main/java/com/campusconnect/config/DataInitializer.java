@@ -11,9 +11,11 @@ import com.campusconnect.repository.OpportunityApplicationRepository;
 import com.campusconnect.repository.OpportunityBookmarkRepository;
 import com.campusconnect.repository.OpportunityRepository;
 import com.campusconnect.repository.RoleRepository;
+import com.campusconnect.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -37,8 +39,13 @@ public class DataInitializer implements CommandLineRunner {
     private final OpportunityBookmarkRepository opportunityBookmarkRepository;
     private final OpportunityApplicationRepository opportunityApplicationRepository;
 
+    private final UserRepository userRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
     public DataInitializer(
             RoleRepository roleRepository,
+            UserRepository userRepository,
+            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
             EventRepository eventRepository,
             EventRegistrationRepository eventRegistrationRepository,
             AnnouncementRepository announcementRepository,
@@ -50,6 +57,8 @@ public class DataInitializer implements CommandLineRunner {
             OpportunityApplicationRepository opportunityApplicationRepository
     ) {
         this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.eventRepository = eventRepository;
         this.eventRegistrationRepository = eventRegistrationRepository;
         this.announcementRepository = announcementRepository;
@@ -64,6 +73,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         seedRoles();
+        seedDevFacultyUser();
         cleanDemoCampusContent();
     }
 
@@ -84,6 +94,31 @@ public class DataInitializer implements CommandLineRunner {
             }
         } catch (Exception e) {
             logger.warn("DataInitializer skipped role seeding: {}", e.getMessage());
+        }
+    }
+
+    private void seedDevFacultyUser() {
+        try {
+            String devFacultyEmail = "faculty.dev@campusconnect.edu";
+            if (!userRepository.existsByEmail(devFacultyEmail)) {
+                Role facultyRole = roleRepository.findByName("FACULTY")
+                        .orElseGet(() -> roleRepository.save(new Role("FACULTY", "Faculty role for managing courses and academic resources")));
+
+                com.campusconnect.entity.User facultyUser = com.campusconnect.entity.User.builder()
+                        .firstName("Faculty")
+                        .lastName("Member")
+                        .email(devFacultyEmail)
+                        .password(passwordEncoder.encode("FacultyPass@123"))
+                        .phone("5550199999")
+                        .isActive(true)
+                        .build();
+
+                facultyUser.addRole(facultyRole);
+                userRepository.save(facultyUser);
+                logger.info("Initialized default development faculty user: {}", devFacultyEmail);
+            }
+        } catch (Exception e) {
+            logger.warn("DataInitializer skipped faculty user seeding: {}", e.getMessage());
         }
     }
 

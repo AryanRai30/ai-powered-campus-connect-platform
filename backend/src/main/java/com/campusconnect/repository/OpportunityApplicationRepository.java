@@ -18,4 +18,8 @@ public interface OpportunityApplicationRepository extends JpaRepository<Opportun
     Optional<OpportunityApplication> findByOpportunityIdAndUserId(Long opportunityId, Long userId);
 
     List<OpportunityApplication> findByUserIdOrderByAppliedAtDesc(Long userId);
+
+    List<OpportunityApplication> findByOpportunityId(Long opportunityId);
+
+    long countByOpportunityId(Long opportunityId);
 }

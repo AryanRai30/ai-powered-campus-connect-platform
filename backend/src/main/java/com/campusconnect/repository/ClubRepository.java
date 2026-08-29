@@ -1,6 +1,7 @@
 package com.campusconnect.repository;
 
 import com.campusconnect.entity.Club;
+import com.campusconnect.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +20,14 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
 
     boolean existsByName(String name);
 
+    List<Club> findAllByCreatedByOrderByIdDesc(User createdBy);
+
+    Optional<Club> findByIdAndCreatedBy(Long id, User createdBy);
+
+    long countByCreatedBy(User createdBy);
+
     @Query("SELECT c FROM Club c WHERE " +
+           "c.published = true AND c.active = true AND " +
            "(:category IS NULL OR :category = '' OR LOWER(c.category) = LOWER(:category)) AND " +
            "(:search IS NULL OR :search = '' OR " +
            "LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +

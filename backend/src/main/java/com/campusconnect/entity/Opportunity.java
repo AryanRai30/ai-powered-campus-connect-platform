@@ -70,6 +70,24 @@ public class Opportunity {
     @Column(name = "active", nullable = false)
     private Boolean active = true;
 
+    @Size(max = 255)
+    @Column(name = "eligibility", length = 255)
+    private String eligibility;
+
+    @Size(max = 100)
+    @Column(name = "target_department", length = 100)
+    private String targetDepartment;
+
+    @Size(max = 100)
+    @Column(name = "target_course", length = 100)
+    private String targetCourse;
+
+    @Column(name = "target_year")
+    private Integer targetYear;
+
+    @Column(name = "target_semester")
+    private Integer targetSemester;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

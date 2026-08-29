@@ -2,6 +2,10 @@ package com.campusconnect.controller;
 
 import com.campusconnect.dto.EventResponse;
 import com.campusconnect.dto.RegistrationStatusResponse;
+import com.campusconnect.entity.StudentProfile;
+import com.campusconnect.entity.User;
+import com.campusconnect.repository.StudentProfileRepository;
+import com.campusconnect.repository.UserRepository;
 import com.campusconnect.service.EventService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +22,17 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
+    private final UserRepository userRepository;
+    private final StudentProfileRepository profileRepository;
 
-    public EventController(EventService eventService) {
+    public EventController(
+            EventService eventService,
+            UserRepository userRepository,
+            StudentProfileRepository profileRepository
+    ) {
         this.eventService = eventService;
+        this.userRepository = userRepository;
+        this.profileRepository = profileRepository;
     }
 
     @GetMapping
@@ -30,7 +42,26 @@ public class EventController {
             Authentication authentication
     ) {
         String userEmail = authentication != null ? authentication.getName() : null;
-        List<EventResponse> events = eventService.getAllEvents(category, search, userEmail);
+        String targetDept = null;
+        String targetCourse = null;
+        Integer targetYear = null;
+        Integer targetSem = null;
+
+        if (userEmail != null) {
+            User u = userRepository.findByEmail(userEmail).orElse(null);
+            if (u != null) {
+                StudentProfile sp = profileRepository.findByUserId(u.getId()).orElse(null);
+                if (sp != null) {
+                    targetDept = sp.getDepartment();
+                    targetCourse = sp.getCourse();
+                    try { targetYear = Integer.parseInt(sp.getYear()); } catch (Exception ignored) {}
+                    try { targetSem = Integer.parseInt(sp.getSemester()); } catch (Exception ignored) {}
+                }
+            }
+        }
+
+        List<EventResponse> events = eventService.getAllEventsForStudent(
+                category, targetDept, targetCourse, targetYear, targetSem, search, userEmail);
         return ResponseEntity.ok(events);
     }
 

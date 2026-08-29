@@ -61,6 +61,26 @@ public class OpportunityService {
     }
 
     @Transactional(readOnly = true)
+    public List<OpportunityResponse> getAllOpportunitiesForStudent(
+            String opportunityType,
+            String location,
+            String targetDept,
+            String targetCourse,
+            Integer targetYear,
+            Integer targetSem,
+            String search,
+            String currentUserEmail
+    ) {
+        User currentUser = currentUserEmail != null ? userRepository.findByEmail(currentUserEmail).orElse(null) : null;
+        List<Opportunity> opportunities = opportunityRepository.filterOpportunitiesForStudent(
+                opportunityType, location, targetDept, targetCourse, targetYear, targetSem, search);
+
+        return opportunities.stream()
+                .map(opp -> mapToResponse(opp, currentUser))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public OpportunityResponse getOpportunityById(Long id, String currentUserEmail) {
         Opportunity opportunity = opportunityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Opportunity not found with id: " + id));

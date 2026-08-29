@@ -62,6 +62,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/student/profile/**").authenticated()
                 .requestMatchers("/api/protected/student").hasRole("STUDENT")
                 .requestMatchers("/api/protected/faculty").hasRole("FACULTY")
+                .requestMatchers("/api/faculty/**").hasRole("FACULTY")
                 .requestMatchers("/api/protected/admin").hasAnyRole("CLUB_ADMIN", "SUPER_ADMIN")
                 // Student Permitted Actions (Register, Join, Bookmark, Apply)
                 .requestMatchers(HttpMethod.POST, "/api/events/*/register", "/api/clubs/*/join", "/api/opportunities/*/bookmark", "/api/opportunities/*/apply").authenticated()

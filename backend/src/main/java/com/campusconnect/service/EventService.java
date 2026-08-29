@@ -49,6 +49,25 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
+    public List<EventResponse> getAllEventsForStudent(
+            String category,
+            String targetDept,
+            String targetCourse,
+            Integer targetYear,
+            Integer targetSem,
+            String search,
+            String currentUserEmail
+    ) {
+        User currentUser = currentUserEmail != null ? userRepository.findByEmail(currentUserEmail).orElse(null) : null;
+        List<Event> events = eventRepository.filterEventsForStudent(
+                category, targetDept, targetCourse, targetYear, targetSem, search);
+
+        return events.stream()
+                .map(event -> mapToResponse(event, currentUser))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public EventResponse getEventById(Long eventId, String currentUserEmail) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));

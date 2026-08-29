@@ -53,6 +53,10 @@ public class Club {
     @Column(name = "meeting_venue", length = 150)
     private String meetingVenue;
 
+    @Size(max = 100)
+    @Column(name = "department", length = 100)
+    private String department;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;

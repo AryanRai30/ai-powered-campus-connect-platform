@@ -3,6 +3,10 @@ package com.campusconnect.controller;
 import com.campusconnect.dto.OpportunityApplicationStatusResponse;
 import com.campusconnect.dto.OpportunityBookmarkStatusResponse;
 import com.campusconnect.dto.OpportunityResponse;
+import com.campusconnect.entity.StudentProfile;
+import com.campusconnect.entity.User;
+import com.campusconnect.repository.StudentProfileRepository;
+import com.campusconnect.repository.UserRepository;
 import com.campusconnect.service.OpportunityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +23,17 @@ import java.util.List;
 public class OpportunityController {
 
     private final OpportunityService opportunityService;
+    private final UserRepository userRepository;
+    private final StudentProfileRepository profileRepository;
 
-    public OpportunityController(OpportunityService opportunityService) {
+    public OpportunityController(
+            OpportunityService opportunityService,
+            UserRepository userRepository,
+            StudentProfileRepository profileRepository
+    ) {
         this.opportunityService = opportunityService;
+        this.userRepository = userRepository;
+        this.profileRepository = profileRepository;
     }
 
     @GetMapping
@@ -32,7 +44,26 @@ public class OpportunityController {
             Authentication authentication
     ) {
         String userEmail = authentication != null ? authentication.getName() : null;
-        List<OpportunityResponse> opportunities = opportunityService.getAllOpportunities(opportunityType, location, search, userEmail);
+        String targetDept = null;
+        String targetCourse = null;
+        Integer targetYear = null;
+        Integer targetSem = null;
+
+        if (userEmail != null) {
+            User u = userRepository.findByEmail(userEmail).orElse(null);
+            if (u != null) {
+                StudentProfile sp = profileRepository.findByUserId(u.getId()).orElse(null);
+                if (sp != null) {
+                    targetDept = sp.getDepartment();
+                    targetCourse = sp.getCourse();
+                    try { targetYear = Integer.parseInt(sp.getYear()); } catch (Exception ignored) {}
+                    try { targetSem = Integer.parseInt(sp.getSemester()); } catch (Exception ignored) {}
+                }
+            }
+        }
+
+        List<OpportunityResponse> opportunities = opportunityService.getAllOpportunitiesForStudent(
+                opportunityType, location, targetDept, targetCourse, targetYear, targetSem, search, userEmail);
         return ResponseEntity.ok(opportunities);
     }
 

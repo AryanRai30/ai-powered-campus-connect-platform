@@ -83,6 +83,9 @@ public class Event {
     @Column(name = "target_year")
     private Integer targetYear;
 
+    @Column(name = "target_semester")
+    private Integer targetSemester;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

@@ -33,6 +33,23 @@ public class AnnouncementService {
     }
 
     @Transactional(readOnly = true)
+    public List<AnnouncementResponse> getAllAnnouncementsForStudent(
+            String category,
+            String targetDept,
+            String targetCourse,
+            Integer targetYear,
+            Integer targetSem,
+            String search
+    ) {
+        List<Announcement> announcements = announcementRepository.filterAnnouncementsForStudent(
+                category, targetDept, targetCourse, targetYear, targetSem, search);
+
+        return announcements.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public AnnouncementResponse getAnnouncementById(Long id) {
         Announcement announcement = announcementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Announcement not found with id: " + id));

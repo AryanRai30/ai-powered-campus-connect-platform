@@ -9,10 +9,12 @@ interface MainLayoutProps {
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { isAuthenticated, loading, user, logout } = useAuth();
 
+  const isFaculty = user?.roles?.includes('FACULTY');
+
   const getLogoDestination = (): string => {
     if (!isAuthenticated || !user) return '/login';
     const roleNames = user.roles || [];
-    if (roleNames.includes('FACULTY')) return '/faculty/dashboard';
+    if (roleNames.includes('FACULTY')) return '/faculty-dashboard';
     if (roleNames.includes('SUPER_ADMIN') || roleNames.includes('CLUB_ADMIN')) return '/admin/dashboard';
     return '/dashboard';
   };
@@ -34,36 +36,85 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
             {!loading && isAuthenticated && (
               <nav className="hidden lg:flex items-center space-x-1">
-                <Link
-                  to="/events"
-                  className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                >
-                  📅 Events
-                </Link>
-                <Link
-                  to="/announcements"
-                  className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                >
-                  📢 Bulletins
-                </Link>
-                <Link
-                  to="/clubs"
-                  className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                >
-                  🤝 Clubs
-                </Link>
-                <Link
-                  to="/resources"
-                  className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                >
-                  📚 Resources
-                </Link>
-                <Link
-                  to="/opportunities"
-                  className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-amber-400 hover:text-amber-300 rounded-lg transition-colors"
-                >
-                  💼 Opportunities
-                </Link>
+                {isFaculty ? (
+                  <>
+                    <Link
+                      to="/faculty-dashboard"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 rounded-lg transition-colors flex items-center space-x-1"
+                    >
+                      <span>🎓 Dashboard</span>
+                    </Link>
+                    <Link
+                      to="/faculty/resources"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                    >
+                      📚 Resources
+                    </Link>
+                    <Link
+                      to="/faculty/announcements"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                    >
+                      📢 Bulletins
+                    </Link>
+                    <Link
+                      to="/faculty/events"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                    >
+                      📅 Events
+                    </Link>
+                    <Link
+                      to="/faculty/opportunities"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-amber-400 hover:text-amber-300 rounded-lg transition-colors"
+                    >
+                      💼 Opportunities
+                    </Link>
+                    <Link
+                      to="/faculty/clubs"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                    >
+                      🤝 Clubs
+                    </Link>
+                    <Link
+                      to="/faculty/students"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 rounded-lg transition-colors"
+                    >
+                      👥 Students
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/events"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                    >
+                      📅 Events
+                    </Link>
+                    <Link
+                      to="/announcements"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                    >
+                      📢 Bulletins
+                    </Link>
+                    <Link
+                      to="/clubs"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                    >
+                      🤝 Clubs
+                    </Link>
+                    <Link
+                      to="/resources"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
+                    >
+                      📚 Resources
+                    </Link>
+                    <Link
+                      to="/opportunities"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-amber-400 hover:text-amber-300 rounded-lg transition-colors"
+                    >
+                      💼 Opportunities
+                    </Link>
+                  </>
+                )}
               </nav>
             )}
           </div>
@@ -73,24 +124,35 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
             ) : isAuthenticated ? (
               <>
-                <Link
-                  to="/dashboard"
-                  className="text-xs font-semibold px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition-colors"
-                >
-                  Dashboard ({user?.firstName})
-                </Link>
-                <Link
-                  to="/my-opportunities"
-                  className="hidden sm:inline-block text-xs font-semibold px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/20 transition-colors"
-                >
-                  My Opportunities
-                </Link>
-                <Link
-                  to="/student-profile"
-                  className="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/20 transition-colors"
-                >
-                  Student Profile
-                </Link>
+                {isFaculty ? (
+                  <Link
+                    to="/faculty-dashboard"
+                    className="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/20 transition-colors"
+                  >
+                    Faculty Dashboard ({user?.firstName})
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className="text-xs font-semibold px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition-colors"
+                    >
+                      Dashboard ({user?.firstName})
+                    </Link>
+                    <Link
+                      to="/my-opportunities"
+                      className="hidden sm:inline-block text-xs font-semibold px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/20 transition-colors"
+                    >
+                      My Opportunities
+                    </Link>
+                    <Link
+                      to="/student-profile"
+                      className="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/20 transition-colors"
+                    >
+                      Student Profile
+                    </Link>
+                  </>
+                )}
                 <button
                   onClick={logout}
                   className="text-xs font-semibold px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 transition-colors"

@@ -38,6 +38,25 @@ public class AcademicResourceService {
     }
 
     @Transactional(readOnly = true)
+    public List<AcademicResourceResponse> getAllResourcesForStudent(
+            String category,
+            String subject,
+            String resourceType,
+            String targetDept,
+            String targetCourse,
+            Integer targetYear,
+            Integer targetSem,
+            String search
+    ) {
+        List<AcademicResource> resources = resourceRepository.filterResourcesForStudent(
+                category, subject, resourceType, targetDept, targetCourse, targetYear, targetSem, search);
+
+        return resources.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public AcademicResourceResponse getResourceById(Long id) {
         AcademicResource resource = resourceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Academic resource not found with id: " + id));

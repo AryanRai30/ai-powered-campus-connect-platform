@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getDefaultDashboardForRoles } from '../utils/navigationUtils';
 import MainLayout from '../layouts/MainLayout';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
@@ -21,6 +22,9 @@ import FacultyEventsPage from '../pages/FacultyEventsPage';
 import FacultyOpportunitiesPage from '../pages/FacultyOpportunitiesPage';
 import FacultyClubsPage from '../pages/FacultyClubsPage';
 import FacultyStudentsPage from '../pages/FacultyStudentsPage';
+import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
+import AdminFacultyPage from '../pages/admin/AdminFacultyPage';
+import AdminStudentsPage from '../pages/admin/AdminStudentsPage';
 import ProtectedRoute from './ProtectedRoute';
 
 const RootRedirect: React.FC = () => {
@@ -28,14 +32,19 @@ const RootRedirect: React.FC = () => {
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
-  const roleNames = user.roles || [];
+  return <Navigate to={getDefaultDashboardForRoles(user.roles)} replace />;
+};
+
+const StudentDashboardGuard: React.FC = () => {
+  const { user } = useAuth();
+  const roleNames = user?.roles || [];
+  if (roleNames.some((r) => ['ADMIN', 'SUPER_ADMIN', 'CLUB_ADMIN'].includes(r))) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
   if (roleNames.includes('FACULTY')) {
     return <Navigate to="/faculty-dashboard" replace />;
   }
-  if (roleNames.includes('SUPER_ADMIN') || roleNames.includes('CLUB_ADMIN')) {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
-  return <Navigate to="/dashboard" replace />;
+  return <DashboardPage />;
 };
 
 /**
@@ -50,10 +59,34 @@ export const AppRoutes: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN', 'CLUB_ADMIN']}>
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/faculty"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN', 'CLUB_ADMIN']}>
+              <AdminFacultyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/students"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN', 'CLUB_ADMIN']}>
+              <AdminStudentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <StudentDashboardGuard />
             </ProtectedRoute>
           }
         />

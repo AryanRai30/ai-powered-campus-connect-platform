@@ -63,7 +63,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/protected/student").hasRole("STUDENT")
                 .requestMatchers("/api/protected/faculty").hasRole("FACULTY")
                 .requestMatchers("/api/faculty/**").hasRole("FACULTY")
-                .requestMatchers("/api/protected/admin").hasAnyRole("CLUB_ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "CLUB_ADMIN")
+                .requestMatchers("/api/protected/admin").hasAnyRole("ADMIN", "SUPER_ADMIN", "CLUB_ADMIN")
                 // Student Permitted Actions (Register, Join, Bookmark, Apply)
                 .requestMatchers(HttpMethod.POST, "/api/events/*/register", "/api/clubs/*/join", "/api/opportunities/*/bookmark", "/api/opportunities/*/apply").authenticated()
                 // Restrict creation of official campus content to Faculty/Admin

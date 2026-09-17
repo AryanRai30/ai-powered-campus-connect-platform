@@ -9,13 +9,14 @@ interface MainLayoutProps {
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { isAuthenticated, loading, user, logout } = useAuth();
 
-  const isFaculty = user?.roles?.includes('FACULTY');
+  const roleNames = user?.roles || [];
+  const isAdmin = roleNames.some(r => ['ADMIN', 'SUPER_ADMIN', 'CLUB_ADMIN'].includes(r));
+  const isFaculty = !isAdmin && roleNames.includes('FACULTY');
 
   const getLogoDestination = (): string => {
     if (!isAuthenticated || !user) return '/login';
-    const roleNames = user.roles || [];
+    if (roleNames.some(r => ['ADMIN', 'SUPER_ADMIN', 'CLUB_ADMIN'].includes(r))) return '/admin/dashboard';
     if (roleNames.includes('FACULTY')) return '/faculty-dashboard';
-    if (roleNames.includes('SUPER_ADMIN') || roleNames.includes('CLUB_ADMIN')) return '/admin/dashboard';
     return '/dashboard';
   };
 
@@ -36,7 +37,28 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
             {!loading && isAuthenticated && (
               <nav className="hidden lg:flex items-center space-x-1">
-                {isFaculty ? (
+                {isAdmin ? (
+                  <>
+                    <Link
+                      to="/admin/dashboard"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-amber-400 hover:text-amber-300 rounded-lg transition-colors flex items-center space-x-1"
+                    >
+                      <span>🛡️ Dashboard</span>
+                    </Link>
+                    <Link
+                      to="/admin/faculty"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-cyan-400 hover:text-cyan-300 rounded-lg transition-colors flex items-center space-x-1"
+                    >
+                      <span>👨‍🏫 Faculty Management</span>
+                    </Link>
+                    <Link
+                      to="/admin/students"
+                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 rounded-lg transition-colors flex items-center space-x-1"
+                    >
+                      <span>🎓 Student Management</span>
+                    </Link>
+                  </>
+                ) : isFaculty ? (
                   <>
                     <Link
                       to="/faculty-dashboard"
@@ -124,7 +146,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
             ) : isAuthenticated ? (
               <>
-                {isFaculty ? (
+                {isAdmin ? (
+                  <Link
+                    to="/admin/dashboard"
+                    className="text-xs font-semibold px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/20 transition-colors"
+                  >
+                    Admin Dashboard ({user?.firstName})
+                  </Link>
+                ) : isFaculty ? (
                   <Link
                     to="/faculty-dashboard"
                     className="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/20 transition-colors"

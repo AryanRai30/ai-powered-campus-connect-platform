@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getDefaultDashboardForRoles } from '../utils/navigationUtils';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -8,17 +9,20 @@ export const LoginPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login, isAuthenticated, loading } = useAuth();
+  const { login, isAuthenticated, loading, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as any)?.from?.pathname || '/dashboard';
-
   useEffect(() => {
-    if (!loading && isAuthenticated) {
-      navigate(from, { replace: true });
+    if (!loading && isAuthenticated && user) {
+      const targetPath = (location.state as any)?.from?.pathname;
+      const defaultPath = getDefaultDashboardForRoles(user.roles);
+      const dest = targetPath && targetPath !== '/login' && targetPath !== '/dashboard'
+        ? targetPath
+        : defaultPath;
+      navigate(dest, { replace: true });
     }
-  }, [isAuthenticated, loading, navigate, from]);
+  }, [isAuthenticated, loading, navigate, location.state, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,8 +35,13 @@ export const LoginPage: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      await login({ email: email.trim(), password });
-      navigate(from, { replace: true });
+      const res = await login({ email: email.trim(), password });
+      const targetPath = (location.state as any)?.from?.pathname;
+      const defaultPath = getDefaultDashboardForRoles(res.roles);
+      const dest = targetPath && targetPath !== '/login' && targetPath !== '/dashboard'
+        ? targetPath
+        : defaultPath;
+      navigate(dest, { replace: true });
     } catch (err: any) {
       if (err.response?.status === 401) {
         setErrorMessage('Invalid email or password. Please check your credentials.');

@@ -3,6 +3,20 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getFacultyDashboard, getFacultyStats } from '../services/facultyService';
 import { FacultyDashboardResponse, FacultyDashboardStats } from '../types/faculty.types';
+import { StatCard } from '../components/common/StatCard';
+import { Badge } from '../components/common/Badge';
+import { SkeletonLoader } from '../components/common/SkeletonLoader';
+import {
+  BookOpenIcon,
+  MegaphoneIcon,
+  CalendarIcon,
+  BriefcaseIcon,
+  UsersIcon,
+  GraduationCapIcon,
+  SparklesIcon,
+  CheckCircleIcon,
+
+} from '../components/common/Icons';
 
 export const FacultyDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -39,260 +53,252 @@ export const FacultyDashboardPage: React.FC = () => {
 
   const contentManagementSections = [
     {
-      title: 'My Resources',
+      title: 'Academic Resources',
       description: 'Create & manage study materials, lecture notes, and PDFs',
-      icon: '📚',
+      icon: BookOpenIcon,
       count: stats?.resourceCount ?? 0,
       link: '/faculty/resources',
       buttonText: 'Manage Resources',
+      color: 'blue' as const,
     },
     {
-      title: 'My Announcements',
+      title: 'Bulletins & Notices',
       description: 'Publish official academic notices and department updates',
-      icon: '📢',
+      icon: MegaphoneIcon,
       count: stats?.announcementCount ?? 0,
       link: '/faculty/announcements',
       buttonText: 'Manage Bulletins',
+      color: 'purple' as const,
     },
     {
-      title: 'My Events',
+      title: 'Campus Events',
       description: 'Schedule campus events and review student registrations',
-      icon: '📅',
+      icon: CalendarIcon,
       count: stats?.eventCount ?? 0,
       link: '/faculty/events',
       buttonText: 'Manage Events',
+      color: 'emerald' as const,
     },
     {
-      title: 'My Opportunities',
+      title: 'Opportunities',
       description: 'Post internships, job listings, and career workshops',
-      icon: '💼',
+      icon: BriefcaseIcon,
       count: stats?.opportunityCount ?? 0,
       link: '/faculty/opportunities',
       buttonText: 'Manage Opportunities',
+      color: 'amber' as const,
     },
     {
-      title: 'My Clubs',
+      title: 'Supervised Clubs',
       description: 'Supervise campus student clubs and member rosters',
-      icon: '🤝',
+      icon: UsersIcon,
       count: stats?.clubCount ?? 0,
       link: '/faculty/clubs',
       buttonText: 'Manage Clubs',
+      color: 'cyan' as const,
     },
   ];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border border-emerald-500/20 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-3">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Faculty Portal</span>
-            </div>
-            <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">
-              Welcome, {displayFirstName} {displayLastName}
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Authorized Faculty Content Management Portal
-            </p>
+    <div className="space-y-8 animate-fade-in">
+      {/* Faculty Welcome Hero */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-brand-600 via-brand-700 to-indigo-800 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="absolute -top-12 -right-12 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+        
+        <div className="space-y-2 relative z-10 max-w-xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold text-blue-100 uppercase tracking-wider">
+            <SparklesIcon size={14} className="text-cyan-300" />
+            <span>Faculty Management Portal</span>
           </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Welcome, Professor {displayFirstName} {displayLastName} 👋
+          </h1>
+          <p className="text-blue-100 text-sm leading-relaxed font-medium">
+            Manage academic resources, publish announcements, supervise clubs, schedule campus events, and oversee student participation.
+          </p>
+        </div>
 
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center space-x-4 backdrop-blur">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xl">
-              🎓
-            </div>
-            <div>
-              <div className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Account Status</div>
-              <div className="flex items-center space-x-2 text-sm font-medium text-slate-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>{displayStatus}</span>
-              </div>
+        <div className="relative z-10 flex items-center gap-3 bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/20">
+          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-white text-lg shrink-0">
+            <GraduationCapIcon size={22} />
+          </div>
+          <div className="text-xs">
+            <span className="text-blue-100 font-medium block uppercase tracking-wider text-[10px]">Account Status</span>
+            <div className="flex items-center gap-1.5 font-bold text-white mt-0.5">
+              <CheckCircleIcon size={14} className="text-emerald-300" />
+              <span>{displayStatus}</span>
             </div>
           </div>
         </div>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-sm font-medium">
           {error}
         </div>
       )}
 
-      {/* Account Info Card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
-        <h2 className="text-lg font-bold text-slate-100 mb-4 flex items-center space-x-2">
-          <span>Faculty Profile</span>
-        </h2>
+      {/* Account Info Bar */}
+      <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-subtle">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+          Faculty Credentials & Ownership Profile
+        </h3>
         {loading ? (
-          <div className="flex items-center space-x-3 text-slate-400 py-4 text-sm">
-            <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
-            <span>Loading faculty information...</span>
-          </div>
+          <SkeletonLoader type="table" count={1} />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-slate-950/60 border border-slate-800/80 p-4 rounded-lg">
-              <div className="text-xs text-slate-400 uppercase font-semibold">Full Name</div>
-              <div className="text-base font-semibold text-slate-200 mt-1">
-                {displayFirstName} {displayLastName}
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60">
+              <span className="text-slate-400 font-medium block">Full Name</span>
+              <span className="text-slate-900 font-bold truncate block">{displayFirstName} {displayLastName}</span>
             </div>
-            <div className="bg-slate-950/60 border border-slate-800/80 p-4 rounded-lg">
-              <div className="text-xs text-slate-400 uppercase font-semibold">Email</div>
-              <div className="text-base font-semibold text-slate-200 mt-1">
-                {displayEmail}
-              </div>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60">
+              <span className="text-slate-400 font-medium block">Faculty Email</span>
+              <span className="text-slate-900 font-bold truncate block">{displayEmail}</span>
             </div>
-            <div className="bg-slate-950/60 border border-slate-800/80 p-4 rounded-lg">
-              <div className="text-xs text-slate-400 uppercase font-semibold">Role</div>
-              <div className="text-base font-semibold text-emerald-400 mt-1">
-                Faculty
-              </div>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60">
+              <span className="text-slate-400 font-medium block">Role Clearance</span>
+              <Badge variant="published" size="sm">FACULTY MEMBER</Badge>
             </div>
           </div>
         )}
       </div>
 
-      {/* Quick Actions & Navigation */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-100">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+      {/* Quick Action Shortcuts */}
+      <div className="space-y-3">
+        <h3 className="text-base font-bold text-slate-900">Quick Creation Actions</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <Link
             to="/faculty/resources"
-            className="p-3 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-center transition-colors group"
+            className="p-4 bg-white border border-slate-200/80 hover:border-brand-500 rounded-2xl text-center transition-all hover:shadow-card-hover group flex flex-col items-center justify-center gap-2"
           >
-            <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">📚</div>
-            <div className="text-xs font-semibold text-slate-200">Create Resource</div>
+            <div className="p-2.5 rounded-xl bg-blue-50 text-brand-600 group-hover:scale-110 transition-transform">
+              <BookOpenIcon size={20} />
+            </div>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-brand-600">Resource</span>
           </Link>
 
           <Link
             to="/faculty/announcements"
-            className="p-3 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-center transition-colors group"
+            className="p-4 bg-white border border-slate-200/80 hover:border-purple-500 rounded-2xl text-center transition-all hover:shadow-card-hover group flex flex-col items-center justify-center gap-2"
           >
-            <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">📢</div>
-            <div className="text-xs font-semibold text-slate-200">Create Bulletin</div>
+            <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600 group-hover:scale-110 transition-transform">
+              <MegaphoneIcon size={20} />
+            </div>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-purple-600">Bulletin</span>
           </Link>
 
           <Link
             to="/faculty/events"
-            className="p-3 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-center transition-colors group"
+            className="p-4 bg-white border border-slate-200/80 hover:border-emerald-500 rounded-2xl text-center transition-all hover:shadow-card-hover group flex flex-col items-center justify-center gap-2"
           >
-            <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">📅</div>
-            <div className="text-xs font-semibold text-slate-200">Create Event</div>
+            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 group-hover:scale-110 transition-transform">
+              <CalendarIcon size={20} />
+            </div>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-emerald-600">Event</span>
           </Link>
 
           <Link
             to="/faculty/opportunities"
-            className="p-3 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-center transition-colors group"
+            className="p-4 bg-white border border-slate-200/80 hover:border-amber-500 rounded-2xl text-center transition-all hover:shadow-card-hover group flex flex-col items-center justify-center gap-2"
           >
-            <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">💼</div>
-            <div className="text-xs font-semibold text-slate-200">Create Opportunity</div>
+            <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 group-hover:scale-110 transition-transform">
+              <BriefcaseIcon size={20} />
+            </div>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-amber-600">Opportunity</span>
           </Link>
 
           <Link
             to="/faculty/clubs"
-            className="p-3 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-center transition-colors group"
+            className="p-4 bg-white border border-slate-200/80 hover:border-cyan-500 rounded-2xl text-center transition-all hover:shadow-card-hover group flex flex-col items-center justify-center gap-2"
           >
-            <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">🤝</div>
-            <div className="text-xs font-semibold text-slate-200">Create Club</div>
+            <div className="p-2.5 rounded-xl bg-cyan-50 text-cyan-600 group-hover:scale-110 transition-transform">
+              <UsersIcon size={20} />
+            </div>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-cyan-600">Club</span>
           </Link>
 
           <Link
             to="/faculty/students"
-            className="p-3 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-center transition-colors group"
+            className="p-4 bg-white border border-slate-200/80 hover:border-indigo-500 rounded-2xl text-center transition-all hover:shadow-card-hover group flex flex-col items-center justify-center gap-2"
           >
-            <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">👥</div>
-            <div className="text-xs font-semibold text-emerald-400">View Students</div>
+            <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 group-hover:scale-110 transition-transform">
+              <GraduationCapIcon size={20} />
+            </div>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-indigo-600">Students</span>
           </Link>
         </div>
       </div>
 
-      {/* Participation Stats */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-100">Student Participation Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg flex items-center justify-between">
-            <div>
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Event Registrations
-              </div>
-              <div className="text-3xl font-extrabold text-emerald-400 mt-2">
-                {stats?.totalEventRegistrations ?? 0}
-              </div>
-              <div className="text-[11px] text-slate-500 mt-1">Across your published events</div>
-            </div>
-            <div className="text-4xl text-emerald-500/20">🎟️</div>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg flex items-center justify-between">
-            <div>
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Club Members
-              </div>
-              <div className="text-3xl font-extrabold text-indigo-400 mt-2">
-                {stats?.totalClubMembers ?? 0}
-              </div>
-              <div className="text-[11px] text-slate-500 mt-1">Across your supervised clubs</div>
-            </div>
-            <div className="text-4xl text-indigo-500/20">👥</div>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg flex items-center justify-between">
-            <div>
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Opportunity Applications
-              </div>
-              <div className="text-3xl font-extrabold text-amber-400 mt-2">
-                {stats?.totalOpportunityApplications ?? 0}
-              </div>
-              <div className="text-[11px] text-slate-500 mt-1">Submitted for your listings</div>
-            </div>
-            <div className="text-4xl text-amber-500/20">📝</div>
-          </div>
+      {/* Participation Stats Grid */}
+      <div className="space-y-3">
+        <h3 className="text-base font-bold text-slate-900">Student Engagement Overview</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <StatCard
+            title="Event Registrations"
+            value={stats?.totalEventRegistrations ?? 0}
+            icon={CalendarIcon}
+            color="emerald"
+            description="Total registered students"
+          />
+          <StatCard
+            title="Club Roster Members"
+            value={stats?.totalClubMembers ?? 0}
+            icon={UsersIcon}
+            color="purple"
+            description="Active club memberships"
+          />
+          <StatCard
+            title="Opportunity Submissions"
+            value={stats?.totalOpportunityApplications ?? 0}
+            icon={BriefcaseIcon}
+            color="amber"
+            description="Submitted applications"
+          />
         </div>
       </div>
 
       {/* Content Management Cards */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-100">Content Management</h2>
-          <p className="text-slate-400 text-sm">
-            Create, publish, and target academic content for student audiences
+          <h3 className="text-base font-bold text-slate-900">Content Management Modules</h3>
+          <p className="text-xs text-slate-500">
+            Publish, edit, unpublish, and filter academic materials by department and course targets.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {contentManagementSections.map((item, index) => (
-            <div
-              key={index}
-              className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-6 relative overflow-hidden flex flex-col justify-between transition-all shadow-lg"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-3xl">{item.icon}</span>
-                  <span className="text-sm font-extrabold px-3 py-1 rounded-full bg-slate-950 text-slate-200 border border-slate-800">
-                    {item.count} Items
-                  </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {contentManagementSections.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={index}
+                className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-subtle hover:shadow-card-hover transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200/60">
+                      <Icon size={24} />
+                    </div>
+                    <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+                      {item.count} Items
+                    </span>
+                  </div>
+                  <h4 className="text-base font-bold text-slate-900 mb-1">{item.title}</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed mb-4">{item.description}</p>
                 </div>
-                <h3 className="text-lg font-bold text-slate-100 mb-1">
-                  {item.title}
-                </h3>
-                <p className="text-slate-400 text-sm mb-4">
-                  {item.description}
-                </p>
-              </div>
 
-              <div className="pt-4 border-t border-slate-800">
-                <Link
-                  to={item.link}
-                  className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center justify-center space-x-2 border border-slate-700 transition-colors"
-                >
-                  <span>{item.buttonText} &rarr;</span>
-                </Link>
+                <div className="pt-4 border-t border-slate-100">
+                  <Link
+                    to={item.link}
+                    className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors border border-slate-200/60"
+                  >
+                    <span>{item.buttonText}</span>
+                    <span>→</span>
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

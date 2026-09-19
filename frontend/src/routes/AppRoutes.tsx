@@ -7,7 +7,7 @@ import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import DashboardPage from '../pages/DashboardPage';
-import StudentProfilePage from '../pages/StudentProfilePage';
+import ProfilePage from '../pages/ProfilePage';
 import EventsPage from '../pages/EventsPage';
 import MyEventsPage from '../pages/MyEventsPage';
 import AnnouncementsPage from '../pages/AnnouncementsPage';
@@ -152,12 +152,16 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/student-profile"
+          path="/profile"
           element={
             <ProtectedRoute>
-              <StudentProfilePage />
+              <ProfilePage />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/student-profile"
+          element={<Navigate to="/profile" replace />}
         />
         <Route
           path="/events"

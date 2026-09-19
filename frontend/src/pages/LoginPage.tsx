@@ -2,10 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getDefaultDashboardForRoles, isPathAllowedForRoles } from '../utils/navigationUtils';
+import {
+  MailIcon,
+  LockIcon,
+  EyeIcon,
+  EyeOffIcon,
+  SparklesIcon,
+  GraduationCapIcon,
+  BookOpenIcon,
+  UsersIcon,
+  AlertCircleIcon,
+} from '../components/common/Icons';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -61,102 +73,168 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto py-8 sm:py-12 px-4 flex flex-col items-center">
-      {/* Hero / Branding Header */}
-      <div className="text-center mb-8 sm:mb-10 w-full space-y-3">
-        <div className="inline-flex items-center space-x-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-          <span className="text-xs font-semibold text-emerald-400 tracking-wide uppercase">
-            Campus Connect
-          </span>
-        </div>
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-5xl bg-white rounded-3xl border border-slate-200/80 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px] animate-fade-in">
         
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
-          Ai Powered Campus Connect <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
-            Platform
-          </span>
-        </h1>
-        
-        <p className="text-slate-400 text-sm sm:text-base md:text-lg max-w-md mx-auto">
-          Your Digital Campus Experience
-        </p>
-      </div>
+        {/* Left Branding Hero Banner (Hidden on small screens) */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-brand-600 via-brand-700 to-indigo-800 p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">
+          {/* Subtle Background Decorative Vectors */}
+          <div className="absolute -top-16 -left-16 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Login Card */}
-      <div className="w-full max-w-md bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-8">
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold text-xl mx-auto mb-3 shadow-inner">
-            CC
+          {/* Top Brand Logo Header */}
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-xs font-bold uppercase tracking-wider mb-6">
+              <SparklesIcon size={14} className="text-cyan-300" />
+              <span>Campus Connect Platform</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight text-white">
+              Connect. Learn. Participate.
+            </h1>
+            <p className="mt-3 text-blue-100 text-sm font-medium leading-relaxed">
+              Your unified SaaS portal for academic resources, campus events, career opportunities, and club communities.
+            </p>
           </div>
-          <h2 className="text-xl font-bold text-slate-100">Welcome Back</h2>
-          <p className="text-slate-400 text-xs sm:text-sm mt-1">
-            Sign in to your Campus Connect account
-          </p>
+
+          {/* Key Value Highlights */}
+          <div className="relative z-10 space-y-4 my-8">
+            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/10">
+              <div className="p-2 rounded-lg bg-white/20 text-white shrink-0">
+                <BookOpenIcon size={18} />
+              </div>
+              <div className="text-xs">
+                <p className="font-bold text-white">Academic Resources</p>
+                <p className="text-blue-100">Access course materials & notes</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/10">
+              <div className="p-2 rounded-lg bg-white/20 text-white shrink-0">
+                <UsersIcon size={18} />
+              </div>
+              <div className="text-xs">
+                <p className="font-bold text-white">Clubs & Organizations</p>
+                <p className="text-blue-100">Join vibrant student communities</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/10">
+              <div className="p-2 rounded-lg bg-white/20 text-white shrink-0">
+                <GraduationCapIcon size={18} />
+              </div>
+              <div className="text-xs">
+                <p className="font-bold text-white">Career Opportunities</p>
+                <p className="text-blue-100">Internships & placement drives</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Footer Note */}
+          <div className="relative z-10 text-xs text-blue-200 font-medium">
+            Academic Architecture Foundation &copy; {new Date().getFullYear()}
+          </div>
         </div>
 
-        {errorMessage && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-start space-x-2">
-            <span className="font-bold">!</span>
-            <span>{errorMessage}</span>
-          </div>
-        )}
+        {/* Right Sign-in Form Column */}
+        <div className="lg:col-span-7 p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
+          <div className="max-w-md mx-auto w-full">
+            {/* Header */}
+            <div className="mb-8 text-center sm:text-left">
+              <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 border border-brand-100 flex items-center justify-center font-extrabold text-xl mb-4 sm:mx-0 mx-auto shadow-xs">
+                CC
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome Back</h2>
+              <p className="text-slate-500 text-sm mt-1">
+                Please enter your credentials to access your account
+              </p>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="student@campusconnect.edu"
-              required
-              className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 disabled:opacity-50 flex items-center justify-center space-x-2 cursor-pointer"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
-                <span>Authenticating...</span>
-              </>
-            ) : (
-              <span>Sign In</span>
+            {/* Error Message Alert */}
+            {errorMessage && (
+              <div className="mb-6 p-4 bg-rose-50 border border-rose-200/80 rounded-2xl text-rose-700 text-sm flex items-start gap-3 animate-slide-up">
+                <AlertCircleIcon size={20} className="shrink-0 text-rose-600 mt-0.5" />
+                <span className="font-medium leading-snug">{errorMessage}</span>
+              </div>
             )}
-          </button>
-        </form>
 
-        <div className="mt-8 text-center text-sm text-slate-400 border-t border-slate-800/80 pt-5">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-semibold underline transition-colors">
-            Register as Student
-          </Link>
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <MailIcon size={18} />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="student@campusconnect.edu"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 transition-all font-medium"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <LockIcon size={18} />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 transition-all font-medium"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Authenticating...</span>
+                  </>
+                ) : (
+                  <span>Sign In to Portal</span>
+                )}
+              </button>
+            </form>
+
+            {/* Registration Footer */}
+            <div className="mt-8 text-center text-xs text-slate-500 border-t border-slate-100 pt-6">
+              Don't have a student account yet?{' '}
+              <Link to="/register" className="text-brand-600 hover:text-brand-700 font-bold underline transition-colors">
+                Register as Student
+              </Link>
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
   );
 };
 
 export default LoginPage;
-

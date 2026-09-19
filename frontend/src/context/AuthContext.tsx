@@ -11,6 +11,7 @@ interface AuthContextType {
   register: (data: RegisterRequest) => Promise<AuthResponse>;
   logout: () => void;
   hasRole: (role: string) => boolean;
+  updateUser: (updatedFields: Partial<AuthenticatedUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -86,6 +87,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return user.roles.includes(role);
   };
 
+  const updateUser = (updatedFields: Partial<AuthenticatedUser>) => {
+    setUser((prevUser) => {
+      if (!prevUser) return null;
+      const newUser = { ...prevUser, ...updatedFields };
+      localStorage.setItem('campus_connect_user', JSON.stringify(newUser));
+      return newUser;
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -97,6 +107,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         register,
         logout,
         hasRole,
+        updateUser,
       }}
     >
       {children}

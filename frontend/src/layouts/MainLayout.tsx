@@ -1,225 +1,95 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Sidebar } from '../components/layout/Sidebar';
+import { TopHeader } from '../components/layout/TopHeader';
+import { XIcon } from '../components/common/Icons';
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  const { isAuthenticated, loading, user, logout } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const roleNames = user?.roles || [];
-  const isAdmin = roleNames.some(r => ['ADMIN', 'SUPER_ADMIN', 'CLUB_ADMIN'].includes(r));
-  const isFaculty = !isAdmin && roleNames.includes('FACULTY');
+  // If loading, show a clean initial loader screen
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md animate-pulse">
+            CC
+          </div>
+          <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Loading Campus Connect...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const getLogoDestination = (): string => {
-    if (!isAuthenticated || !user) return '/login';
-    if (roleNames.some(r => ['ADMIN', 'SUPER_ADMIN', 'CLUB_ADMIN'].includes(r))) return '/admin/dashboard';
-    if (roleNames.includes('FACULTY')) return '/faculty/dashboard';
-    return '/dashboard';
-  };
+  // Unauthenticated layout (e.g., login or register pages wrapper)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
+        <main className="flex-grow">{children}</main>
+        <footer className="py-4 border-t border-slate-200 bg-white text-center text-xs text-slate-400 font-medium">
+          Campus Connect Platform &copy; {new Date().getFullYear()} — Academic Management System
+        </footer>
+      </div>
+    );
+  }
 
+  // Authenticated Dashboard Layout with Sidebar & Header
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
-      {/* App Header */}
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-5">
-            <Link to={getLogoDestination()} className="flex items-center space-x-3 hover:opacity-90 transition-opacity">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950 shadow-md shadow-emerald-500/20">
-                CC
-              </div>
-              <span className="font-semibold text-lg tracking-tight text-white">
-                Campus Connect
-              </span>
-            </Link>
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row antialiased">
+      {/* Desktop Sticky Sidebar */}
+      <div className="hidden md:block sticky top-0 h-screen z-40 shrink-0">
+        <Sidebar
+          collapsed={collapsed}
+          onToggleCollapse={() => setCollapsed(!collapsed)}
+        />
+      </div>
 
-            {!loading && isAuthenticated && (
-              <nav className="hidden lg:flex items-center space-x-1">
-                {isAdmin ? (
-                  <>
-                    <Link
-                      to="/admin/dashboard"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-amber-400 hover:text-amber-300 rounded-lg transition-colors flex items-center space-x-1"
-                    >
-                      <span>🛡️ Dashboard</span>
-                    </Link>
-                    <Link
-                      to="/admin/faculty"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-cyan-400 hover:text-cyan-300 rounded-lg transition-colors flex items-center space-x-1"
-                    >
-                      <span>👨‍🏫 Faculty Management</span>
-                    </Link>
-                    <Link
-                      to="/admin/students"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 rounded-lg transition-colors flex items-center space-x-1"
-                    >
-                      <span>🎓 Student Management</span>
-                    </Link>
-                  </>
-                ) : isFaculty ? (
-                  <>
-                    <Link
-                      to="/faculty/dashboard"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 rounded-lg transition-colors flex items-center space-x-1"
-                    >
-                      <span>🎓 Dashboard</span>
-                    </Link>
-                    <Link
-                      to="/faculty/resources"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                    >
-                      📚 Resources
-                    </Link>
-                    <Link
-                      to="/faculty/announcements"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                    >
-                      📢 Bulletins
-                    </Link>
-                    <Link
-                      to="/faculty/events"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                    >
-                      📅 Events
-                    </Link>
-                    <Link
-                      to="/faculty/opportunities"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-amber-400 hover:text-amber-300 rounded-lg transition-colors"
-                    >
-                      💼 Opportunities
-                    </Link>
-                    <Link
-                      to="/faculty/clubs"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                    >
-                      🤝 Clubs
-                    </Link>
-                    <Link
-                      to="/faculty/students"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 rounded-lg transition-colors"
-                    >
-                      👥 Students
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      to="/events"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                    >
-                      📅 Events
-                    </Link>
-                    <Link
-                      to="/announcements"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                    >
-                      📢 Bulletins
-                    </Link>
-                    <Link
-                      to="/clubs"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                    >
-                      🤝 Clubs
-                    </Link>
-                    <Link
-                      to="/resources"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors"
-                    >
-                      📚 Resources
-                    </Link>
-                    <Link
-                      to="/opportunities"
-                      className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-amber-400 hover:text-amber-300 rounded-lg transition-colors"
-                    >
-                      💼 Opportunities
-                    </Link>
-                  </>
-                )}
-              </nav>
-            )}
-          </div>
-
-          <div className="flex items-center space-x-3">
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
-            ) : isAuthenticated ? (
-              <>
-                {isAdmin ? (
-                  <Link
-                    to="/admin/dashboard"
-                    className="text-xs font-semibold px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/20 transition-colors"
-                  >
-                    Admin Dashboard ({user?.firstName})
-                  </Link>
-                ) : isFaculty ? (
-                  <Link
-                    to="/faculty/dashboard"
-                    className="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/20 transition-colors"
-                  >
-                    Faculty Dashboard ({user?.firstName})
-                  </Link>
-                ) : (
-                  <>
-                    <Link
-                      to="/dashboard"
-                      className="text-xs font-semibold px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition-colors"
-                    >
-                      Dashboard ({user?.firstName})
-                    </Link>
-                    <Link
-                      to="/my-opportunities"
-                      className="hidden sm:inline-block text-xs font-semibold px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/20 transition-colors"
-                    >
-                      My Opportunities
-                    </Link>
-                    <Link
-                      to="/student-profile"
-                      className="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/20 transition-colors"
-                    >
-                      Student Profile
-                    </Link>
-                  </>
-                )}
-                <button
-                  onClick={logout}
-                  className="text-xs font-semibold px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 transition-colors"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="text-xs font-semibold px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  className="text-xs font-semibold px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-lg transition-colors shadow-sm shadow-emerald-500/20"
-                >
-                  Register
-                </Link>
-              </>
-            )}
+      {/* Mobile Slide-out Navigation Drawer Overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-fade-in"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 w-72 bg-white shadow-2xl z-10 flex flex-col animate-slide-up">
+            <div className="p-4 flex items-center justify-between border-b border-slate-100">
+              <span className="font-extrabold text-slate-900 text-lg">Menu</span>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
+              >
+                <XIcon size={20} />
+              </button>
+            </div>
+            <div className="flex-grow overflow-y-auto">
+              <Sidebar
+                collapsed={false}
+                onToggleCollapse={() => {}}
+                onMobileClose={() => setMobileOpen(false)}
+              />
+            </div>
           </div>
         </div>
-      </header>
+      )}
 
-      {/* Main Content Area */}
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {children}
-      </main>
+      {/* Main Content Workspace */}
+      <div className="flex-grow flex flex-col min-w-0">
+        <TopHeader onMobileOpen={() => setMobileOpen(true)} />
 
-      {/* App Footer */}
-      <footer className="border-t border-slate-800 bg-slate-900/30 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500">
-          Ai Powered Campus Connect Platform &copy; {new Date().getFullYear()} — Academic Architecture Foundation
-        </div>
-      </footer>
+        <main className="flex-grow p-4 md:p-8 max-w-7xl w-full mx-auto animate-fade-in">
+          {children}
+        </main>
+
+        <footer className="py-6 px-4 md:px-8 border-t border-slate-200/80 bg-white text-center text-xs text-slate-400 font-medium">
+          Campus Connect Platform &copy; {new Date().getFullYear()} — Academic Architecture Foundation
+        </footer>
+      </div>
     </div>
   );
 };

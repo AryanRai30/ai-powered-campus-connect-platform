@@ -16,7 +16,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const getLogoDestination = (): string => {
     if (!isAuthenticated || !user) return '/login';
     if (roleNames.some(r => ['ADMIN', 'SUPER_ADMIN', 'CLUB_ADMIN'].includes(r))) return '/admin/dashboard';
-    if (roleNames.includes('FACULTY')) return '/faculty-dashboard';
+    if (roleNames.includes('FACULTY')) return '/faculty/dashboard';
     return '/dashboard';
   };
 
@@ -61,7 +61,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 ) : isFaculty ? (
                   <>
                     <Link
-                      to="/faculty-dashboard"
+                      to="/faculty/dashboard"
                       className="text-xs font-semibold px-2.5 py-1.5 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 rounded-lg transition-colors flex items-center space-x-1"
                     >
                       <span>🎓 Dashboard</span>
@@ -155,7 +155,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   </Link>
                 ) : isFaculty ? (
                   <Link
-                    to="/faculty-dashboard"
+                    to="/faculty/dashboard"
                     className="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/20 transition-colors"
                   >
                     Faculty Dashboard ({user?.firstName})

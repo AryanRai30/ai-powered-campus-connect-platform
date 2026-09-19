@@ -1,9 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { AcademicResourceItem } from '../types/campus.types';
-import { fetchAcademicResources } from '../services/campusService';
+import { fetchAcademicResources, viewResourceFile, downloadResourceFile, fetchResourceObjectUrl } from '../services/campusService';
 
-const RESOURCE_TYPES = ['All', 'NOTES', 'PDF', 'VIDEO', 'WEBSITE', 'OTHER'];
-const CATEGORIES = ['All', 'Computer Science', 'Software Engineering', 'Data Science'];
+const RESOURCE_TYPES = ['All', 'PDF', 'PPT', 'DOC', 'VIDEO', 'IMAGE', 'ZIP', 'NOTES', 'OTHER'];
+const CATEGORIES = ['All', 'Computer Science', 'Software Engineering', 'Data Science', 'General'];
+
+const formatFileSize = (bytes?: number): string => {
+  if (!bytes || bytes === 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 export const ResourcesPage: React.FC = () => {
   const [resources, setResources] = useState<AcademicResourceItem[]>([]);
@@ -13,6 +20,8 @@ export const ResourcesPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedResource, setSelectedResource] = useState<AcademicResourceItem | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const [activeVideoModal, setActiveVideoModal] = useState<{ url: string; title: string } | null>(null);
 
   const loadResources = async (
     category: string = selectedCategory,
@@ -41,37 +50,61 @@ export const ResourcesPage: React.FC = () => {
     loadResources(selectedCategory, selectedType, searchQuery);
   };
 
-  const isValidExternalUrl = (url?: string): boolean => {
-    if (!url || !url.trim()) return false;
-    const lower = url.trim().toLowerCase();
-    if (
-      lower.includes('example.com') ||
-      lower.includes('example.org') ||
-      lower.includes('example.net') ||
-      lower.includes('placeholder')
-    ) {
-      return false;
+  const handleViewFile = async (res: AcademicResourceItem) => {
+    if (res.hasFile) {
+      try {
+        setActionLoadingId(res.id);
+        const typeUpper = (res.resourceType || '').toUpperCase();
+        if (typeUpper === 'DOC' || typeUpper === 'ZIP') {
+          alert(`Document format (${typeUpper}) cannot be rendered directly in browser. Downloading file...`);
+          await downloadResourceFile(res.id, res.originalFileName);
+        } else if (typeUpper === 'VIDEO' || res.fileContentType?.includes('video')) {
+          const { objectUrl } = await fetchResourceObjectUrl(res.id);
+          setActiveVideoModal({ url: objectUrl, title: res.title });
+        } else {
+          await viewResourceFile(res.id);
+        }
+      } catch (err: any) {
+        alert('Failed to view resource file.');
+      } finally {
+        setActionLoadingId(null);
+      }
+    } else if (res.resourceUrl) {
+      window.open(res.resourceUrl, '_blank', 'noopener,noreferrer');
     }
-    return lower.startsWith('http://') || lower.startsWith('https://');
   };
 
-  const handleOpenLink = (url?: string) => {
-    if (!url || !isValidExternalUrl(url)) return;
-    window.open(url, '_blank', 'noopener,noreferrer');
+  const handleDownloadFile = async (res: AcademicResourceItem) => {
+    if (res.hasFile) {
+      try {
+        setActionLoadingId(res.id);
+        await downloadResourceFile(res.id, res.originalFileName);
+      } catch (err: any) {
+        alert('Failed to download resource file.');
+      } finally {
+        setActionLoadingId(null);
+      }
+    } else if (res.resourceUrl) {
+      window.open(res.resourceUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const getTypeBadgeClass = (type?: string) => {
     switch (type?.toUpperCase()) {
       case 'PDF':
         return 'bg-red-500/10 text-red-400 border-red-500/30';
+      case 'PPT':
+        return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
+      case 'DOC':
+        return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
       case 'VIDEO':
         return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-      case 'WEBSITE':
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
-      case 'NOTES':
+      case 'IMAGE':
         return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-      default:
+      case 'ZIP':
         return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+      default:
+        return 'bg-teal-500/10 text-teal-400 border-teal-500/30';
     }
   };
 
@@ -87,7 +120,7 @@ export const ResourcesPage: React.FC = () => {
             Academic Resources
           </h1>
           <p className="text-slate-400 text-sm leading-relaxed">
-            Access curated course lecture notes, reference PDFs, video tutorials, and technical handbooks across your subjects.
+            Access and download faculty lecture notes, presentation slides, reference PDFs, and course handbooks.
           </p>
         </div>
       </div>
@@ -128,7 +161,7 @@ export const ResourcesPage: React.FC = () => {
           <form onSubmit={handleSearchSubmit} className="flex items-center space-x-2 flex-grow sm:flex-grow-0">
             <input
               type="text"
-              placeholder="Search topic, subject, or title..."
+              placeholder="Search topic, subject, or filename..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full sm:w-56 px-4 py-2.5 text-xs bg-slate-900 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors"
@@ -173,7 +206,7 @@ export const ResourcesPage: React.FC = () => {
           <div className="text-4xl">📚</div>
           <h3 className="text-lg font-semibold text-slate-300">No academic resources available yet</h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
-            Faculty resources will appear here when they are published.
+            Faculty resources will appear here when they are published for your department and course.
           </p>
           {(selectedCategory !== 'All' || selectedType !== 'All' || searchQuery) && (
             <button
@@ -199,7 +232,7 @@ export const ResourcesPage: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${getTypeBadgeClass(res.resourceType)}`}>
-                    {res.resourceType || 'RESOURCE'}
+                    {res.resourceType || 'FILE'}
                   </span>
                   <span className="px-2.5 py-1 bg-slate-800 text-slate-400 border border-slate-700 text-xs font-medium rounded-lg truncate max-w-[140px]">
                     {res.subject}
@@ -214,11 +247,22 @@ export const ResourcesPage: React.FC = () => {
                   {res.description}
                 </p>
 
-                {res.category && (
+                {res.hasFile ? (
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-300 font-medium truncate max-w-[180px]" title={res.originalFileName}>
+                        📄 {res.originalFileName}
+                      </span>
+                      <span className="text-cyan-400 font-mono font-bold text-[11px]">
+                        {formatFileSize(res.fileSize)}
+                      </span>
+                    </div>
+                  </div>
+                ) : res.category ? (
                   <div className="text-xs text-slate-500 pt-1">
                     Category: <span className="text-slate-300 font-medium">{res.category}</span>
                   </div>
-                )}
+                ) : null}
               </div>
 
               {/* Action buttons footer */}
@@ -227,22 +271,33 @@ export const ResourcesPage: React.FC = () => {
                   onClick={() => setSelectedResource(res)}
                   className="text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
                 >
-                  View Details →
+                  Details →
                 </button>
 
-                {isValidExternalUrl(res.resourceUrl) ? (
-                  <button
-                    onClick={() => handleOpenLink(res.resourceUrl)}
-                    className="px-3.5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-md shadow-cyan-500/20 flex items-center space-x-1"
-                  >
-                    <span>Open Resource</span>
-                    <span>↗</span>
-                  </button>
-                ) : (
-                  <span className="px-3 py-1.5 bg-slate-800/60 text-slate-500 border border-slate-800 text-xs rounded-xl font-medium italic">
-                    Link unavailable
-                  </span>
-                )}
+                <div className="flex items-center space-x-2">
+                  {res.hasFile || res.resourceUrl ? (
+                    <>
+                      <button
+                        onClick={() => handleViewFile(res)}
+                        disabled={actionLoadingId === res.id}
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition-colors disabled:opacity-50"
+                      >
+                        👁️ View
+                      </button>
+                      <button
+                        onClick={() => handleDownloadFile(res)}
+                        disabled={actionLoadingId === res.id}
+                        className="px-3.5 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-md shadow-cyan-500/20 flex items-center space-x-1 disabled:opacity-50"
+                      >
+                        <span>⬇️ Download</span>
+                      </button>
+                    </>
+                  ) : (
+                    <span className="px-3 py-1.5 bg-slate-800/60 text-slate-500 border border-slate-800 text-xs rounded-xl font-medium italic">
+                      No file
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -281,18 +336,24 @@ export const ResourcesPage: React.FC = () => {
                 <span className="text-slate-500 block">Resource Format</span>
                 <span className="text-slate-200 font-semibold">{selectedResource.resourceType || 'Standard'}</span>
               </div>
-              <div className="col-span-2">
-                <span className="text-slate-500 block">Resource Link</span>
-                {isValidExternalUrl(selectedResource.resourceUrl) ? (
+              {selectedResource.hasFile ? (
+                <div className="col-span-2">
+                  <span className="text-slate-500 block">Attached File</span>
+                  <div className="flex items-center justify-between text-xs mt-1">
+                    <span className="text-slate-200 font-mono font-medium truncate">{selectedResource.originalFileName}</span>
+                    <span className="text-cyan-400 font-mono font-bold">{formatFileSize(selectedResource.fileSize)}</span>
+                  </div>
+                </div>
+              ) : selectedResource.resourceUrl ? (
+                <div className="col-span-2">
+                  <span className="text-slate-500 block">External Link</span>
                   <span className="text-cyan-400 font-mono font-medium truncate block">{selectedResource.resourceUrl}</span>
-                ) : (
-                  <span className="text-slate-500 font-mono font-medium italic block">Link unavailable</span>
-                )}
-              </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Resource Summary</h4>
+              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Resource Description</h4>
               <p className="text-sm text-slate-300 whitespace-pre-line leading-relaxed">
                 {selectedResource.description}
               </p>
@@ -306,22 +367,64 @@ export const ResourcesPage: React.FC = () => {
                 Close
               </button>
 
-              {isValidExternalUrl(selectedResource.resourceUrl) ? (
-                <button
-                  onClick={() => handleOpenLink(selectedResource.resourceUrl)}
-                  className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center space-x-1"
-                >
-                  <span>Open Resource</span>
-                  <span>↗</span>
-                </button>
-              ) : (
-                <button
-                  disabled
-                  className="px-5 py-2.5 bg-slate-800 text-slate-500 border border-slate-700 text-xs font-semibold rounded-xl cursor-not-allowed italic"
-                >
-                  Link unavailable
-                </button>
-              )}
+              {selectedResource.hasFile || selectedResource.resourceUrl ? (
+                <>
+                  <button
+                    onClick={() => handleViewFile(selectedResource)}
+                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700"
+                  >
+                    👁️ View File
+                  </button>
+                  <button
+                    onClick={() => handleDownloadFile(selectedResource)}
+                    className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center space-x-1"
+                  >
+                    <span>⬇️ Download File</span>
+                  </button>
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HTML5 Video Player Modal */}
+      {activeVideoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl relative">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white flex items-center space-x-2">
+                <span>🎥</span>
+                <span className="truncate">{activeVideoModal.title}</span>
+              </h3>
+              <button
+                onClick={() => {
+                  URL.revokeObjectURL(activeVideoModal.url);
+                  setActiveVideoModal(null);
+                }}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="bg-black rounded-2xl overflow-hidden shadow-inner flex justify-center items-center">
+              <video
+                src={activeVideoModal.url}
+                controls
+                autoPlay
+                className="w-full max-h-[70vh] rounded-2xl"
+              />
+            </div>
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => {
+                  URL.revokeObjectURL(activeVideoModal.url);
+                  setActiveVideoModal(null);
+                }}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl"
+              >
+                Close Player
+              </button>
             </div>
           </div>
         </div>

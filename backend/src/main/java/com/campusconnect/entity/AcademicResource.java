@@ -50,6 +50,26 @@ public class AcademicResource {
     @Column(name = "resource_url", length = 500)
     private String resourceUrl;
 
+    @Size(max = 255)
+    @Column(name = "original_file_name", length = 255)
+    private String originalFileName;
+
+    @Size(max = 255)
+    @Column(name = "stored_file_name", length = 255)
+    private String storedFileName;
+
+    @Size(max = 100)
+    @Column(name = "file_content_type", length = 100)
+    private String fileContentType;
+
+    @Column(name = "file_size")
+    private Long fileSize;
+
+    @Size(max = 500)
+    @Column(name = "file_storage_path", length = 500)
+    private String fileStoragePath;
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;

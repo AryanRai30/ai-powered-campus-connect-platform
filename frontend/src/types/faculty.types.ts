@@ -38,6 +38,11 @@ export interface FacultyResource {
   subject: string;
   resourceType?: string;
   resourceUrl?: string;
+  originalFileName?: string;
+  storedFileName?: string;
+  fileContentType?: string;
+  fileSize?: number;
+  hasFile?: boolean;
   published: boolean;
   active: boolean;
   targetDepartment?: string;

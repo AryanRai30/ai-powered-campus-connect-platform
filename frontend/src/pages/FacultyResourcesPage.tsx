@@ -7,7 +7,15 @@ import {
   publishFacultyResource,
   unpublishFacultyResource,
 } from '../services/facultyService';
+import { viewResourceFile, downloadResourceFile } from '../services/campusService';
 import { FacultyResource, FacultyResourceRequest } from '../types/faculty.types';
+
+const formatFileSize = (bytes?: number): string => {
+  if (!bytes || bytes === 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 export const FacultyResourcesPage: React.FC = () => {
   const [resources, setResources] = useState<FacultyResource[]>([]);
@@ -19,6 +27,7 @@ export const FacultyResourcesPage: React.FC = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingResource, setEditingResource] = useState<FacultyResource | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<FacultyResourceRequest>({
@@ -26,7 +35,7 @@ export const FacultyResourcesPage: React.FC = () => {
     description: '',
     subject: '',
     category: 'General',
-    resourceType: 'NOTES',
+    resourceType: 'PDF',
     resourceUrl: '',
     targetDepartment: '',
     targetCourse: '',
@@ -58,12 +67,13 @@ export const FacultyResourcesPage: React.FC = () => {
 
   const openCreateModal = () => {
     setEditingResource(null);
+    setSelectedFile(null);
     setFormData({
       title: '',
       description: '',
       subject: '',
       category: 'General',
-      resourceType: 'NOTES',
+      resourceType: 'PDF',
       resourceUrl: '',
       targetDepartment: '',
       targetCourse: '',
@@ -76,12 +86,13 @@ export const FacultyResourcesPage: React.FC = () => {
 
   const openEditModal = (resource: FacultyResource) => {
     setEditingResource(resource);
+    setSelectedFile(null);
     setFormData({
       title: resource.title,
       description: resource.description,
       subject: resource.subject,
       category: resource.category || 'General',
-      resourceType: resource.resourceType || 'NOTES',
+      resourceType: resource.resourceType || 'PDF',
       resourceUrl: resource.resourceUrl || '',
       targetDepartment: resource.targetDepartment || '',
       targetCourse: resource.targetCourse || '',
@@ -92,19 +103,74 @@ export const FacultyResourcesPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const ALLOWED_EXTENSIONS = ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png', 'webp', 'mp4', 'webm', 'mov', 'zip'];
+  const DISALLOWED_EXTENSIONS = ['exe', 'bat', 'cmd', 'sh', 'ps1', 'jar', 'php', 'jsp', 'asp', 'aspx', 'py', 'js', 'vbs', 'wsf', 'com', 'scr', 'cpl', 'msi', 'htm', 'html'];
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+
+      if (DISALLOWED_EXTENSIONS.includes(ext)) {
+        alert(`Executable or dangerous file types (.${ext}) are strictly prohibited.`);
+        e.target.value = '';
+        setSelectedFile(null);
+        return;
+      }
+
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        alert(`Unsupported file type: .${ext}. Allowed formats: PDF, PPT/PPTX, DOC/DOCX, TXT, Images (JPG, PNG, WEBP), Videos (MP4, WEBM, MOV), ZIP.`);
+        e.target.value = '';
+        setSelectedFile(null);
+        return;
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds the maximum limit of 100MB.`);
+        e.target.value = '';
+        setSelectedFile(null);
+        return;
+      }
+
+      setSelectedFile(file);
+
+      // Auto-detect resource type from file extension
+      if (['pdf'].includes(ext)) setFormData((prev) => ({ ...prev, resourceType: 'PDF' }));
+      else if (['ppt', 'pptx'].includes(ext)) setFormData((prev) => ({ ...prev, resourceType: 'PPT' }));
+      else if (['doc', 'docx', 'txt'].includes(ext)) setFormData((prev) => ({ ...prev, resourceType: 'DOC' }));
+      else if (['mp4', 'webm', 'mov'].includes(ext)) setFormData((prev) => ({ ...prev, resourceType: 'VIDEO' }));
+      else if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) setFormData((prev) => ({ ...prev, resourceType: 'IMAGE' }));
+      else if (['zip'].includes(ext)) setFormData((prev) => ({ ...prev, resourceType: 'ZIP' }));
+    }
+  };
+
+  const removeSelectedFile = () => {
+    setSelectedFile(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setFormSubmitting(true);
-      if (editingResource) {
-        await updateFacultyResource(editingResource.id, formData);
-      } else {
-        await createFacultyResource(formData);
+
+      if (!editingResource && !selectedFile && !formData.resourceUrl?.trim()) {
+        alert('Please select a file to upload for the academic resource.');
+        setFormSubmitting(false);
+        return;
       }
+
+      if (editingResource) {
+        await updateFacultyResource(editingResource.id, formData, selectedFile || undefined);
+      } else {
+        await createFacultyResource(formData, selectedFile || undefined);
+      }
+
       setIsModalOpen(false);
+      setSelectedFile(null);
       fetchResources();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to save academic resource.');
+      alert(err.response?.data?.message || 'Failed to save academic resource file.');
     } finally {
       setFormSubmitting(false);
     }
@@ -137,7 +203,8 @@ export const FacultyResourcesPage: React.FC = () => {
     const matchesSearch =
       r.title.toLowerCase().includes(search.toLowerCase()) ||
       r.subject.toLowerCase().includes(search.toLowerCase()) ||
-      r.description.toLowerCase().includes(search.toLowerCase());
+      r.description.toLowerCase().includes(search.toLowerCase()) ||
+      (r.originalFileName && r.originalFileName.toLowerCase().includes(search.toLowerCase()));
 
     const matchesStatus =
       statusFilter === 'ALL' ||
@@ -147,23 +214,35 @@ export const FacultyResourcesPage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const getFormatBadge = (type?: string) => {
+    switch (type?.toUpperCase()) {
+      case 'PDF': return 'bg-red-500/10 text-red-400 border-red-500/30';
+      case 'PPT': return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
+      case 'DOC': return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+      case 'VIDEO': return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+      case 'IMAGE': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+      case 'ZIP': return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+      default: return 'bg-teal-500/10 text-teal-400 border-teal-500/30';
+    }
+  };
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 flex items-center space-x-3">
-            <span>📚 Academic Resources Management</span>
+            <span>📚 Academic Resources & File Upload Portal</span>
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            Create, publish, and target course materials, notes, and study resources for students.
+            Upload PDF notes, slides, video lectures, and study documents for enrolled students.
           </p>
         </div>
         <button
           onClick={openCreateModal}
           className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl text-sm transition-all shadow-md shadow-emerald-500/20 flex items-center justify-center space-x-2"
         >
-          <span>+ Create Resource</span>
+          <span>📤 Upload Resource File</span>
         </button>
       </div>
 
@@ -172,7 +251,7 @@ export const FacultyResourcesPage: React.FC = () => {
         <div className="relative w-full sm:w-80">
           <input
             type="text"
-            placeholder="Search resources by title or subject..."
+            placeholder="Search by title, subject, or filename..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
@@ -210,10 +289,10 @@ export const FacultyResourcesPage: React.FC = () => {
         </div>
       ) : filteredResources.length === 0 ? (
         <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-12 text-center">
-          <div className="text-4xl mb-3">📚</div>
-          <h3 className="text-lg font-bold text-slate-300">No resources created yet.</h3>
+          <div className="text-4xl mb-3">📁</div>
+          <h3 className="text-lg font-bold text-slate-300">No resources uploaded yet.</h3>
           <p className="text-slate-500 text-sm mt-1">
-            Click "+ Create Resource" to add your first academic resource.
+            Click "Upload Resource File" to upload course materials for your students.
           </p>
         </div>
       ) : (
@@ -225,8 +304,8 @@ export const FacultyResourcesPage: React.FC = () => {
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold px-2.5 py-1 bg-slate-800 text-slate-300 rounded-md border border-slate-700">
-                    {resource.subject}
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${getFormatBadge(resource.resourceType)}`}>
+                    {resource.resourceType || 'FILE'}
                   </span>
                   <span
                     className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
@@ -239,12 +318,55 @@ export const FacultyResourcesPage: React.FC = () => {
                   </span>
                 </div>
 
-                <h3 className="text-lg font-bold text-slate-100 mb-2 line-clamp-1">
+                <h3 className="text-lg font-bold text-slate-100 mb-1 line-clamp-1">
                   {resource.title}
                 </h3>
-                <p className="text-slate-400 text-sm mb-4 line-clamp-3">
+
+                <p className="text-xs text-slate-400 font-semibold mb-2">
+                  Subject: <span className="text-slate-200">{resource.subject}</span>
+                </p>
+
+                <p className="text-slate-400 text-sm mb-4 line-clamp-2">
                   {resource.description}
                 </p>
+
+                {/* File Attachment Details Box */}
+                {resource.hasFile ? (
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl mb-4 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400 font-medium truncate max-w-[200px]" title={resource.originalFileName}>
+                        📄 {resource.originalFileName}
+                      </span>
+                      <span className="text-emerald-400 font-mono text-[11px] font-bold">
+                        {formatFileSize(resource.fileSize)}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2 pt-1 border-t border-slate-900">
+                      <button
+                        onClick={() => viewResourceFile(resource.id)}
+                        className="text-[11px] font-semibold text-emerald-400 hover:underline"
+                      >
+                        👁️ View File
+                      </button>
+                      <span className="text-slate-700">•</span>
+                      <button
+                        onClick={() => downloadResourceFile(resource.id, resource.originalFileName)}
+                        className="text-[11px] font-semibold text-cyan-400 hover:underline"
+                      >
+                        ⬇️ Download
+                      </button>
+                    </div>
+                  </div>
+                ) : resource.resourceUrl ? (
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl mb-4 text-xs">
+                    <span className="text-slate-400 block truncate">🔗 {resource.resourceUrl}</span>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl mb-4 text-xs text-slate-500 italic flex items-center space-x-2">
+                    <span>⚠️</span>
+                    <span>No file attached</span>
+                  </div>
+                )}
 
                 {/* Target Tags */}
                 <div className="flex flex-wrap gap-1.5 mb-4">
@@ -314,7 +436,7 @@ export const FacultyResourcesPage: React.FC = () => {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
             <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
               <h3 className="text-lg font-bold text-slate-100">
-                {editingResource ? 'Edit Academic Resource' : 'Create Academic Resource'}
+                {editingResource ? 'Edit Academic Resource' : 'Upload Academic Resource File'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -336,7 +458,7 @@ export const FacultyResourcesPage: React.FC = () => {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
-                    placeholder="e.g. Data Structures Unit 3 Lecture Notes"
+                    placeholder="e.g. Data Structures Unit 3 Notes"
                   />
                 </div>
 
@@ -365,31 +487,56 @@ export const FacultyResourcesPage: React.FC = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
-                  placeholder="Detailed breakdown of the material..."
+                  placeholder="Detailed description of the material..."
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
-                    Resource Type
-                  </label>
-                  <select
-                    value={formData.resourceType}
-                    onChange={(e) => setFormData({ ...formData, resourceType: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="NOTES">Notes</option>
-                    <option value="PDF">PDF</option>
-                    <option value="VIDEO">Video Lecture</option>
-                    <option value="WEBSITE">Website / Link</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
+              {/* FILE UPLOAD SECTION */}
+              <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
+                <label className="block text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                  Select File to Upload *
+                </label>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  accept=".pdf,.ppt,.pptx,.doc,.docx,.txt,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov,.zip"
+                  className="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer"
+                />
 
+                {selectedFile && (
+                  <div className="p-3 bg-slate-900 border border-emerald-500/30 rounded-lg flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-semibold text-slate-200 block">Selected: {selectedFile.name}</span>
+                      <span className="text-slate-400 text-[11px]">Type: {selectedFile.type || 'Standard Document'}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <span className="text-emerald-400 font-mono font-bold">{formatFileSize(selectedFile.size)}</span>
+                      <button
+                        type="button"
+                        onClick={removeSelectedFile}
+                        className="text-red-400 hover:text-red-300 font-bold px-2 py-1 bg-red-500/10 hover:bg-red-500/20 rounded border border-red-500/20 text-[11px]"
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {editingResource && editingResource.hasFile && !selectedFile && (
+                  <div className="text-xs text-slate-400 italic">
+                    Current file: <span className="text-slate-200 font-semibold">{editingResource.originalFileName}</span> ({formatFileSize(editingResource.fileSize)}). Select a new file above to replace it.
+                  </div>
+                )}
+
+                <p className="text-[11px] text-slate-500">
+                  Supported Formats: PDF, PPT/PPTX, DOC/DOCX, TXT, Images (JPG, PNG, WEBP), Videos (MP4, WEBM, MOV), ZIP. Executables (.exe, .bat, etc.) are blocked. Max file size: 100MB.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
-                    Category
+                    Resource Category
                   </label>
                   <input
                     type="text"
@@ -402,15 +549,22 @@ export const FacultyResourcesPage: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
-                    Resource URL
+                    Resource Format / Type
                   </label>
-                  <input
-                    type="url"
-                    value={formData.resourceUrl}
-                    onChange={(e) => setFormData({ ...formData, resourceUrl: e.target.value })}
+                  <select
+                    value={formData.resourceType}
+                    onChange={(e) => setFormData({ ...formData, resourceType: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
-                    placeholder="https://..."
-                  />
+                  >
+                    <option value="PDF">PDF</option>
+                    <option value="PPT">PowerPoint (PPT/PPTX)</option>
+                    <option value="DOC">Word Document (DOC/DOCX)</option>
+                    <option value="VIDEO">Video Lecture (MP4/WEBM)</option>
+                    <option value="IMAGE">Image (JPG/PNG/WEBP)</option>
+                    <option value="ZIP">ZIP Archive</option>
+                    <option value="NOTES">Text / Notes</option>
+                    <option value="OTHER">Other</option>
+                  </select>
                 </div>
               </div>
 
@@ -493,7 +647,7 @@ export const FacultyResourcesPage: React.FC = () => {
                   disabled={formSubmitting}
                   className="px-4 py-2 bg-emerald-500 text-slate-950 font-semibold rounded-lg text-sm hover:bg-emerald-400"
                 >
-                  {formSubmitting ? 'Saving...' : editingResource ? 'Update Resource' : 'Create Resource'}
+                  {formSubmitting ? 'Uploading...' : editingResource ? 'Update Resource' : 'Publish Resource'}
                 </button>
               </div>
             </form>
@@ -507,7 +661,7 @@ export const FacultyResourcesPage: React.FC = () => {
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-sm w-full text-center">
             <h3 className="text-lg font-bold text-slate-100 mb-2">Delete Resource?</h3>
             <p className="text-slate-400 text-sm mb-6">
-              Are you sure you want to delete this resource? This action cannot be undone.
+              Are you sure you want to delete this resource and its associated file? This action cannot be undone.
             </p>
             <div className="flex items-center justify-center space-x-3">
               <button

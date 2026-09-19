@@ -111,6 +111,54 @@ export const fetchAcademicResourceById = async (id: number): Promise<AcademicRes
   return response.data;
 };
 
+export const getResourceFileBlob = async (
+  id: number,
+  mode: 'view' | 'download' = 'view'
+): Promise<{ blob: Blob; filename: string; contentType: string }> => {
+  const endpoint = mode === 'download' ? `/resources/${id}/download` : `/resources/${id}/file`;
+  const response = await api.get(endpoint, { responseType: 'blob' });
+
+  let filename = 'resource-file';
+  const disposition = response.headers['content-disposition'];
+  if (disposition && disposition.includes('filename=')) {
+    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+    if (matches && matches[1]) {
+      filename = matches[1].replace(/['"]/g, '');
+    }
+  }
+
+  const contentType = response.headers['content-type'] || response.data?.type || 'application/octet-stream';
+  return { blob: response.data, filename, contentType };
+};
+
+export const viewResourceFile = async (id: number): Promise<string> => {
+  const { blob, contentType } = await getResourceFileBlob(id, 'view');
+  const typedBlob = new Blob([blob], { type: contentType });
+  const fileURL = URL.createObjectURL(typedBlob);
+  window.open(fileURL, '_blank', 'noopener,noreferrer');
+  return fileURL;
+};
+
+export const fetchResourceObjectUrl = async (id: number): Promise<{ objectUrl: string; contentType: string; filename: string }> => {
+  const { blob, filename, contentType } = await getResourceFileBlob(id, 'view');
+  const typedBlob = new Blob([blob], { type: contentType });
+  const objectUrl = URL.createObjectURL(typedBlob);
+  return { objectUrl, contentType, filename };
+};
+
+export const downloadResourceFile = async (id: number, fallbackName?: string): Promise<void> => {
+  const { blob, filename, contentType } = await getResourceFileBlob(id, 'download');
+  const typedBlob = new Blob([blob], { type: contentType });
+  const fileURL = URL.createObjectURL(typedBlob);
+  const link = document.createElement('a');
+  link.href = fileURL;
+  link.setAttribute('download', fallbackName || filename || 'downloaded-resource');
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(fileURL), 10000);
+};
+
 /**
  * Service for Opportunities & Career Support API calls
  */

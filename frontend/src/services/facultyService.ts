@@ -47,14 +47,54 @@ export const getFacultyResources = async (): Promise<FacultyResource[]> => {
   return response.data;
 };
 
-export const createFacultyResource = async (data: FacultyResourceRequest): Promise<FacultyResource> => {
-  const response = await api.post<FacultyResource>('/faculty/resources', data);
-  return response.data;
+export const createFacultyResource = async (data: FacultyResourceRequest, file?: File): Promise<FacultyResource> => {
+  if (file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', data.title);
+    formData.append('description', data.description);
+    formData.append('subject', data.subject);
+    if (data.category) formData.append('category', data.category);
+    if (data.resourceType) formData.append('resourceType', data.resourceType);
+    if (data.resourceUrl) formData.append('resourceUrl', data.resourceUrl);
+    if (data.targetDepartment) formData.append('targetDepartment', data.targetDepartment);
+    if (data.targetCourse) formData.append('targetCourse', data.targetCourse);
+    if (data.targetYear !== undefined && data.targetYear !== null) formData.append('targetYear', String(data.targetYear));
+    if (data.targetSemester !== undefined && data.targetSemester !== null) formData.append('targetSemester', String(data.targetSemester));
+    if (data.targetSection) formData.append('targetSection', data.targetSection);
+    formData.append('published', String(data.published ?? false));
+
+    const response = await api.post<FacultyResource>('/faculty/resources', formData);
+    return response.data;
+  } else {
+    const response = await api.post<FacultyResource>('/faculty/resources', data);
+    return response.data;
+  }
 };
 
-export const updateFacultyResource = async (id: number, data: FacultyResourceRequest): Promise<FacultyResource> => {
-  const response = await api.put<FacultyResource>(`/faculty/resources/${id}`, data);
-  return response.data;
+export const updateFacultyResource = async (id: number, data: FacultyResourceRequest, file?: File): Promise<FacultyResource> => {
+  if (file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', data.title);
+    formData.append('description', data.description);
+    formData.append('subject', data.subject);
+    if (data.category) formData.append('category', data.category);
+    if (data.resourceType) formData.append('resourceType', data.resourceType);
+    if (data.resourceUrl) formData.append('resourceUrl', data.resourceUrl);
+    if (data.targetDepartment) formData.append('targetDepartment', data.targetDepartment);
+    if (data.targetCourse) formData.append('targetCourse', data.targetCourse);
+    if (data.targetYear !== undefined && data.targetYear !== null) formData.append('targetYear', String(data.targetYear));
+    if (data.targetSemester !== undefined && data.targetSemester !== null) formData.append('targetSemester', String(data.targetSemester));
+    if (data.targetSection) formData.append('targetSection', data.targetSection);
+    if (data.published !== undefined) formData.append('published', String(data.published));
+
+    const response = await api.put<FacultyResource>(`/faculty/resources/${id}`, formData);
+    return response.data;
+  } else {
+    const response = await api.put<FacultyResource>(`/faculty/resources/${id}`, data);
+    return response.data;
+  }
 };
 
 export const deleteFacultyResource = async (id: number): Promise<void> => {

@@ -20,6 +20,11 @@ public class FacultyResourceResponse {
     private String subject;
     private String resourceType;
     private String resourceUrl;
+    private String originalFileName;
+    private String storedFileName;
+    private String fileContentType;
+    private Long fileSize;
+    private Boolean hasFile;
     private Boolean published;
     private Boolean active;
 

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getDefaultDashboardForRoles } from '../utils/navigationUtils';
 
 interface ProtectedRouteProps {
   children: React.ReactElement;
@@ -38,12 +39,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
           <p className="text-slate-400 text-sm mb-4">
             You do not have the required permissions ({allowedRoles.join(', ')}) to access this page.
           </p>
-          <a
-            href="/dashboard"
+          <Link
+            to={getDefaultDashboardForRoles(user?.roles)}
             className="inline-block px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm transition-colors"
           >
             Back to Dashboard
-          </a>
+          </Link>
         </div>
       );
     }

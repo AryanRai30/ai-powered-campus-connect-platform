@@ -59,6 +59,11 @@ export interface AcademicResourceItem {
   subject: string;
   resourceType?: string; // NOTES, PDF, VIDEO, WEBSITE, OTHER
   resourceUrl?: string;
+  originalFileName?: string;
+  storedFileName?: string;
+  fileContentType?: string;
+  fileSize?: number;
+  hasFile?: boolean;
   createdAt: string;
   updatedAt?: string;
 }

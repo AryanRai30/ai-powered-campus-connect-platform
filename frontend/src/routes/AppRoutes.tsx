@@ -42,7 +42,7 @@ const StudentDashboardGuard: React.FC = () => {
     return <Navigate to="/admin/dashboard" replace />;
   }
   if (roleNames.includes('FACULTY')) {
-    return <Navigate to="/faculty-dashboard" replace />;
+    return <Navigate to="/faculty/dashboard" replace />;
   }
   return <DashboardPage />;
 };
@@ -91,7 +91,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/faculty-dashboard"
+          path="/faculty/dashboard"
           element={
             <ProtectedRoute allowedRoles={['FACULTY']}>
               <FacultyDashboardPage />
@@ -99,8 +99,8 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/faculty/dashboard"
-          element={<Navigate to="/faculty-dashboard" replace />}
+          path="/faculty-dashboard"
+          element={<Navigate to="/faculty/dashboard" replace />}
         />
         <Route
           path="/faculty/resources"

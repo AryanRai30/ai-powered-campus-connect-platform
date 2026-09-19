@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getDefaultDashboardForRoles } from '../utils/navigationUtils';
+import { getDefaultDashboardForRoles, isPathAllowedForRoles } from '../utils/navigationUtils';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -13,13 +13,21 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const getDestinationPath = (targetPath?: string, userRoles?: string[]): string => {
+    const defaultPath = getDefaultDashboardForRoles(userRoles);
+    if (!targetPath || targetPath === '/login' || targetPath === '/dashboard') {
+      return defaultPath;
+    }
+    if (!isPathAllowedForRoles(targetPath, userRoles)) {
+      return defaultPath;
+    }
+    return targetPath;
+  };
+
   useEffect(() => {
     if (!loading && isAuthenticated && user) {
       const targetPath = (location.state as any)?.from?.pathname;
-      const defaultPath = getDefaultDashboardForRoles(user.roles);
-      const dest = targetPath && targetPath !== '/login' && targetPath !== '/dashboard'
-        ? targetPath
-        : defaultPath;
+      const dest = getDestinationPath(targetPath, user.roles);
       navigate(dest, { replace: true });
     }
   }, [isAuthenticated, loading, navigate, location.state, user]);
@@ -37,10 +45,7 @@ export const LoginPage: React.FC = () => {
       setIsSubmitting(true);
       const res = await login({ email: email.trim(), password });
       const targetPath = (location.state as any)?.from?.pathname;
-      const defaultPath = getDefaultDashboardForRoles(res.roles);
-      const dest = targetPath && targetPath !== '/login' && targetPath !== '/dashboard'
-        ? targetPath
-        : defaultPath;
+      const dest = getDestinationPath(targetPath, res.roles);
       navigate(dest, { replace: true });
     } catch (err: any) {
       if (err.response?.status === 401) {

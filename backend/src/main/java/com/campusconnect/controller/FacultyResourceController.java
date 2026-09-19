@@ -5,9 +5,11 @@ import com.campusconnect.dto.FacultyResourceResponse;
 import com.campusconnect.service.FacultyResourceService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,12 +23,22 @@ public class FacultyResourceController {
         this.resourceService = resourceService;
     }
 
-    @PostMapping
-    public ResponseEntity<FacultyResourceResponse> createResource(
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<FacultyResourceResponse> createResourceMultipart(
+            @Valid @ModelAttribute FacultyResourceRequest request,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            Authentication authentication
+    ) {
+        FacultyResourceResponse response = resourceService.createResource(request, file, authentication.getName());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<FacultyResourceResponse> createResourceJson(
             @Valid @RequestBody FacultyResourceRequest request,
             Authentication authentication
     ) {
-        FacultyResourceResponse response = resourceService.createResource(request, authentication.getName());
+        FacultyResourceResponse response = resourceService.createResource(request, null, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -45,13 +57,24 @@ public class FacultyResourceController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<FacultyResourceResponse> updateResource(
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<FacultyResourceResponse> updateResourceMultipart(
+            @PathVariable Long id,
+            @Valid @ModelAttribute FacultyResourceRequest request,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            Authentication authentication
+    ) {
+        FacultyResourceResponse response = resourceService.updateResource(id, request, file, authentication.getName());
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<FacultyResourceResponse> updateResourceJson(
             @PathVariable Long id,
             @Valid @RequestBody FacultyResourceRequest request,
             Authentication authentication
     ) {
-        FacultyResourceResponse response = resourceService.updateResource(id, request, authentication.getName());
+        FacultyResourceResponse response = resourceService.updateResource(id, request, null, authentication.getName());
         return ResponseEntity.ok(response);
     }
 

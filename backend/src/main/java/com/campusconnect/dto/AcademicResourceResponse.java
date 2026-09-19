@@ -21,6 +21,11 @@ public class AcademicResourceResponse {
     private String subject;
     private String resourceType;
     private String resourceUrl;
+    private String originalFileName;
+    private String storedFileName;
+    private String fileContentType;
+    private Long fileSize;
+    private Boolean hasFile;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

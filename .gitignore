@@ -69,7 +69,12 @@ frontend/.parcel-cache/
 frontend/.eslintcache
 frontend/.vite/
 
+# Uploaded files
+uploads/
+backend/uploads/
+
 # Temporary / Scratch Files
 scratch/
 tmp/
 *.tmp
+

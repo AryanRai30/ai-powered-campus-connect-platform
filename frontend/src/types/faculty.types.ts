@@ -142,11 +142,14 @@ export interface FacultyEventRequest {
 export interface EventRegistrationItem {
   registrationId: number;
   studentId: number;
+  studentIdCode?: string;
   firstName: string;
   lastName: string;
   email: string;
+  course?: string;
   department?: string;
   year?: string | number;
+  semester?: string | number;
   registeredAt: string;
 }
 
@@ -202,6 +205,7 @@ export interface OpportunityApplicationItem {
   course?: string;
   department?: string;
   year?: string;
+  semester?: string | number;
   applicationStatus: string;
   appliedAt: string;
 }
@@ -240,10 +244,13 @@ export interface FacultyClubRequest {
 export interface ClubMemberItem {
   membershipId: number;
   studentId: number;
+  studentIdCode?: string;
   firstName: string;
   lastName: string;
   email: string;
+  course?: string;
   department?: string;
   year?: string | number;
+  semester?: string | number;
   joinedAt: string;
 }

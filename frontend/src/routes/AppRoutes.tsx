@@ -9,6 +9,7 @@ import RegisterPage from '../pages/RegisterPage';
 import DashboardPage from '../pages/DashboardPage';
 import StudentProfilePage from '../pages/StudentProfilePage';
 import EventsPage from '../pages/EventsPage';
+import MyEventsPage from '../pages/MyEventsPage';
 import AnnouncementsPage from '../pages/AnnouncementsPage';
 import ClubsPage from '../pages/ClubsPage';
 import MyClubsPage from '../pages/MyClubsPage';
@@ -163,6 +164,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <EventsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-events"
+          element={
+            <ProtectedRoute>
+              <MyEventsPage />
             </ProtectedRoute>
           }
         />

@@ -23,6 +23,7 @@ public class FacultyOpportunityApplicationResponse {
     private String course;
     private String department;
     private String year;
+    private String semester;
     private String applicationStatus;
     private LocalDateTime appliedAt;
 }

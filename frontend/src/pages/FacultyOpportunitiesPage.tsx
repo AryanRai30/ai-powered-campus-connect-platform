@@ -152,12 +152,13 @@ export const FacultyOpportunitiesPage: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
+    if (!id) return;
     try {
       await deleteFacultyOpportunity(id);
       setDeleteConfirmId(null);
-      fetchOpportunities();
+      await fetchOpportunities();
     } catch (err: any) {
-      alert('Failed to delete opportunity.');
+      alert(err.response?.data?.message || 'Failed to delete opportunity.');
     }
   };
 
@@ -357,14 +358,18 @@ export const FacultyOpportunitiesPage: React.FC = () => {
                           {app.firstName} {app.lastName}
                         </div>
                         <div className="text-xs text-slate-400">{app.email}</div>
+                        {app.studentId && (
+                          <div className="text-[11px] text-amber-400 font-mono mt-0.5">ID: {app.studentId}</div>
+                        )}
                       </div>
                       <div className="text-right text-xs text-slate-400">
                         <div className="font-semibold text-amber-400 uppercase text-[11px] mb-0.5">
                           {app.applicationStatus || 'APPLIED'}
                         </div>
-                        <div>{app.department ? `${app.department} (${app.course})` : 'N/A'}</div>
-                        <div className="text-[10px] text-slate-500">
-                          Applied {new Date(app.appliedAt).toLocaleDateString()}
+                        <div>{app.department || 'N/A'} {app.course ? `(${app.course})` : ''}</div>
+                        <div>{app.year ? `Yr ${app.year}` : ''} {app.semester ? `Sem ${app.semester}` : ''}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">
+                          Applied {new Date(app.appliedAt).toLocaleString()}
                         </div>
                       </div>
                     </div>

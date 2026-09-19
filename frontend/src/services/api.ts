@@ -20,11 +20,15 @@ const api = axios.create({
  */
 api.interceptors.request.use(
   (config) => {
+    if (!config.headers) {
+      config.headers = {} as any;
+    }
+
     // If request payload is FormData, remove default JSON content-type to allow Axios/browser to set multipart boundary
     if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
-      if (config.headers && typeof config.headers.delete === 'function') {
+      if (typeof config.headers.delete === 'function') {
         config.headers.delete('Content-Type');
-      } else if (config.headers) {
+      } else {
         delete config.headers['Content-Type'];
       }
     }
@@ -32,11 +36,10 @@ api.interceptors.request.use(
     const token = localStorage.getItem('campus_connect_token');
     if (token && token.trim() !== '' && token !== 'undefined' && token !== 'null') {
       const authHeader = `Bearer ${token.trim()}`;
-      if (config.headers && typeof config.headers.set === 'function') {
+      if (typeof config.headers.set === 'function') {
         config.headers.set('Authorization', authHeader);
-      } else if (config.headers) {
-        config.headers['Authorization'] = authHeader;
       }
+      config.headers['Authorization'] = authHeader;
     }
     return config;
   },

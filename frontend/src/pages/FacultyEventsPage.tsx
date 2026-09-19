@@ -149,12 +149,13 @@ export const FacultyEventsPage: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
+    if (!id) return;
     try {
       await deleteFacultyEvent(id);
       setDeleteConfirmId(null);
-      fetchEvents();
+      await fetchEvents();
     } catch (err: any) {
-      alert('Failed to delete event.');
+      alert(err.response?.data?.message || 'Failed to delete event.');
     }
   };
 
@@ -525,11 +526,15 @@ export const FacultyEventsPage: React.FC = () => {
                           {reg.firstName} {reg.lastName}
                         </div>
                         <div className="text-xs text-slate-400">{reg.email}</div>
+                        {reg.studentIdCode && (
+                          <div className="text-[11px] text-emerald-400 font-mono mt-0.5">ID: {reg.studentIdCode}</div>
+                        )}
                       </div>
                       <div className="text-right text-xs text-slate-400">
-                        <div>{reg.department ? `${reg.department} (Yr ${reg.year})` : 'N/A'}</div>
-                        <div className="text-[10px] text-slate-500">
-                          {new Date(reg.registeredAt).toLocaleDateString()}
+                        <div>{reg.department || 'N/A'} {reg.course ? `(${reg.course})` : ''}</div>
+                        <div>{reg.year ? `Yr ${reg.year}` : ''} {reg.semester ? `Sem ${reg.semester}` : ''}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">
+                          {new Date(reg.registeredAt).toLocaleString()}
                         </div>
                       </div>
                     </div>

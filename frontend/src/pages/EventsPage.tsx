@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { EventItem } from '../types/campus.types';
 import { fetchEvents, registerForEvent } from '../services/campusService';
+import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = ['All', 'Tech Summit', 'Hackathon', 'Workshop', 'Cultural', 'Sports'];
 
 export const EventsPage: React.FC = () => {
+  const { user } = useAuth();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Registration Form Modal state
+  const [registrationModalEvent, setRegistrationModalEvent] = useState<EventItem | null>(null);
   const [registeringId, setRegisteringId] = useState<number | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -37,13 +43,21 @@ export const EventsPage: React.FC = () => {
     loadEvents(selectedCategory, searchQuery);
   };
 
-  const handleRegister = async (eventId: number) => {
+  const handleOpenRegistrationModal = (evt: EventItem) => {
+    setRegistrationModalEvent(evt);
+  };
+
+  const handleConfirmRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!registrationModalEvent) return;
+
+    const eventId = registrationModalEvent.id;
     setRegisteringId(eventId);
     setToastMessage(null);
     try {
       await registerForEvent(eventId);
-      setToastMessage({ text: 'Successfully registered for the event!', type: 'success' });
-      // Refresh event list to update counts and state
+      setToastMessage({ text: 'Registration confirmed! Event added to your schedule.', type: 'success' });
+      setRegistrationModalEvent(null);
       await loadEvents(selectedCategory, searchQuery);
       if (selectedEvent && selectedEvent.id === eventId) {
         setSelectedEvent((prev) => prev ? { ...prev, registered: true, registrationCount: prev.registrationCount + 1 } : null);
@@ -78,7 +92,7 @@ export const EventsPage: React.FC = () => {
       )}
 
       {/* Header Banner */}
-      <div className="relative p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/40 border border-slate-800 overflow-hidden shadow-2xl">
+      <div className="relative p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/40 border border-slate-800 overflow-hidden shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="relative z-10 max-w-2xl space-y-3">
           <div className="inline-flex items-center space-x-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full">
             <span>📅 Campus Life & Activities</span>
@@ -87,8 +101,18 @@ export const EventsPage: React.FC = () => {
             Campus Events & Workshops
           </h1>
           <p className="text-slate-400 text-sm leading-relaxed">
-            Discover hackathons, guest lectures, cultural festivals, and technical symposiums. Register instantly with your student credentials.
+            Discover hackathons, guest lectures, cultural festivals, and technical symposiums. Register with your authenticated student credentials.
           </p>
+        </div>
+
+        <div className="relative z-10 self-start md:self-auto">
+          <Link
+            to="/my-events"
+            className="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-500/20 flex items-center space-x-2 whitespace-nowrap"
+          >
+            <span>My Registered Events</span>
+            <span>→</span>
+          </Link>
         </div>
       </div>
 
@@ -191,7 +215,7 @@ export const EventsPage: React.FC = () => {
                   {evt.registered ? (
                     <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold rounded-lg flex items-center space-x-1">
                       <span>✓</span>
-                      <span>Registered</span>
+                      <span>Already Registered</span>
                     </span>
                   ) : evt.registrationRequired ? (
                     <span className="px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold rounded-lg">
@@ -245,25 +269,17 @@ export const EventsPage: React.FC = () => {
                   View Details →
                 </button>
 
-                {evt.registrationRequired && (
-                  <button
-                    onClick={() => handleRegister(evt.id)}
-                    disabled={evt.registered || registeringId === evt.id}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md ${
-                      evt.registered
-                        ? 'bg-slate-800 text-emerald-400 border border-emerald-500/20 cursor-default'
-                        : registeringId === evt.id
-                        ? 'bg-emerald-500/50 text-slate-950 cursor-wait'
-                        : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
-                    }`}
-                  >
-                    {evt.registered
-                      ? 'Already Registered'
-                      : registeringId === evt.id
-                      ? 'Registering...'
-                      : 'Register Now'}
-                  </button>
-                )}
+                <button
+                  onClick={() => evt.registered ? null : handleOpenRegistrationModal(evt)}
+                  disabled={evt.registered}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md ${
+                    evt.registered
+                      ? 'bg-slate-800 text-emerald-400 border border-emerald-500/20 cursor-default'
+                      : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
+                  }`}
+                >
+                  {evt.registered ? 'Already Registered' : 'Register Now'}
+                </button>
               </div>
             </div>
           ))}
@@ -331,20 +347,100 @@ export const EventsPage: React.FC = () => {
                 Close
               </button>
 
-              {selectedEvent.registrationRequired && (
-                <button
-                  onClick={() => handleRegister(selectedEvent.id)}
-                  disabled={selectedEvent.registered || registeringId === selectedEvent.id}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                    selectedEvent.registered
-                      ? 'bg-slate-800 text-emerald-400 border border-emerald-500/20 cursor-default'
-                      : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
-                  }`}
-                >
-                  {selectedEvent.registered ? 'Already Registered' : 'Register Now'}
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  const target = selectedEvent;
+                  setSelectedEvent(null);
+                  if (!target.registered) {
+                    handleOpenRegistrationModal(target);
+                  }
+                }}
+                disabled={selectedEvent.registered}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  selectedEvent.registered
+                    ? 'bg-slate-800 text-emerald-400 border border-emerald-500/20 cursor-default'
+                    : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+                }`}
+              >
+                {selectedEvent.registered ? 'Already Registered' : 'Register Now'}
+              </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dedicated Event Registration Form Modal */}
+      {registrationModalEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
+            <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+              <div>
+                <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg">
+                  Event Registration Form
+                </span>
+                <h3 className="text-xl font-bold text-white mt-2">{registrationModalEvent.title}</h3>
+              </div>
+              <button
+                onClick={() => setRegistrationModalEvent(null)}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 bg-slate-950 border border-slate-800/80 rounded-2xl space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Date & Time:</span>
+                <span className="text-slate-200 font-semibold">{registrationModalEvent.eventDate} {registrationModalEvent.eventTime ? `at ${registrationModalEvent.eventTime}` : ''}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Venue:</span>
+                <span className="text-slate-200 font-semibold">{registrationModalEvent.venue}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Organizer:</span>
+                <span className="text-slate-200 font-semibold">{registrationModalEvent.organizer || 'Campus Connect'}</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleConfirmRegistration} className="space-y-4">
+              <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-3">
+                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                  Authenticated Student Details
+                </h4>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-500 block">Name</span>
+                    <span className="text-slate-200 font-semibold">{user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Authenticated Student'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Email</span>
+                    <span className="text-slate-200 font-semibold">{user?.email || 'Student Email'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-400 leading-relaxed">
+                By submitting this form, your attendance will be officially registered with the event organizers.
+              </p>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setRegistrationModalEvent(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={registeringId === registrationModalEvent.id}
+                  className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/20"
+                >
+                  {registeringId === registrationModalEvent.id ? 'Submitting Registration...' : 'Confirm Registration'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

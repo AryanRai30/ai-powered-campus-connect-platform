@@ -2,15 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClubItem } from '../types/campus.types';
 import { fetchClubs, joinClub } from '../services/campusService';
+import { studentProfileService } from '../services/studentProfileService';
+import { StudentProfileResponse } from '../types/studentProfile.types';
+import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = ['All', 'Technology', 'Cultural', 'Sports', 'Business'];
 
 export const ClubsPage: React.FC = () => {
+  const { user } = useAuth();
   const [clubs, setClubs] = useState<ClubItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Application Modal State & Student Profile
+  const [applicationModalClub, setApplicationModalClub] = useState<ClubItem | null>(null);
+  const [studentProfile, setStudentProfile] = useState<StudentProfileResponse | null>(null);
   const [joiningId, setJoiningId] = useState<number | null>(null);
   const [selectedClub, setSelectedClub] = useState<ClubItem | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -33,17 +41,38 @@ export const ClubsPage: React.FC = () => {
     loadClubs(selectedCategory, searchQuery);
   }, [selectedCategory]);
 
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await studentProfileService.getProfile();
+        setStudentProfile(profile);
+      } catch (err) {
+        console.warn('Student profile not created yet or failed to load profile data', err);
+      }
+    };
+    loadProfile();
+  }, []);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     loadClubs(selectedCategory, searchQuery);
   };
 
-  const handleJoin = async (clubId: number) => {
+  const handleOpenApplicationModal = (club: ClubItem) => {
+    setApplicationModalClub(club);
+  };
+
+  const handleConfirmJoin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!applicationModalClub) return;
+
+    const clubId = applicationModalClub.id;
     setJoiningId(clubId);
     setToastMessage(null);
     try {
       await joinClub(clubId);
-      setToastMessage({ text: 'Welcome to the club! Membership registered successfully.', type: 'success' });
+      setToastMessage({ text: 'Welcome to the club! Membership application confirmed successfully.', type: 'success' });
+      setApplicationModalClub(null);
       await loadClubs(selectedCategory, searchQuery);
       if (selectedClub && selectedClub.id === clubId) {
         setSelectedClub((prev) => prev ? { ...prev, joined: true, memberCount: prev.memberCount + 1 } : null);
@@ -256,17 +285,15 @@ export const ClubsPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => handleJoin(club.id)}
-                  disabled={club.joined || joiningId === club.id}
+                  onClick={() => club.joined ? null : handleOpenApplicationModal(club)}
+                  disabled={club.joined}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md ${
                     club.joined
                       ? 'bg-slate-800 text-emerald-400 border border-emerald-500/20 cursor-default'
-                      : joiningId === club.id
-                      ? 'bg-purple-500/50 text-slate-950 cursor-wait'
                       : 'bg-purple-500 hover:bg-purple-400 text-slate-950 shadow-purple-500/20'
                   }`}
                 >
-                  {club.joined ? 'Already Joined' : joiningId === club.id ? 'Joining...' : 'Join Club'}
+                  {club.joined ? 'Already Joined' : 'Join Club'}
                 </button>
               </div>
             </div>
@@ -336,8 +363,14 @@ export const ClubsPage: React.FC = () => {
               </button>
 
               <button
-                onClick={() => handleJoin(selectedClub.id)}
-                disabled={selectedClub.joined || joiningId === selectedClub.id}
+                onClick={() => {
+                  const target = selectedClub;
+                  setSelectedClub(null);
+                  if (!target.joined) {
+                    handleOpenApplicationModal(target);
+                  }
+                }}
+                disabled={selectedClub.joined}
                 className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                   selectedClub.joined
                     ? 'bg-slate-800 text-emerald-400 border border-emerald-500/20 cursor-default'
@@ -347,6 +380,119 @@ export const ClubsPage: React.FC = () => {
                 {selectedClub.joined ? 'Already Joined' : 'Join Club'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dedicated Club Application Form Modal */}
+      {applicationModalClub && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+              <div>
+                <span className="px-3 py-1 bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold rounded-lg">
+                  Club Membership Application
+                </span>
+                <h3 className="text-xl font-bold text-white mt-2">{applicationModalClub.name}</h3>
+              </div>
+              <button
+                onClick={() => setApplicationModalClub(null)}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Club Summary Details */}
+            <div className="p-4 bg-slate-950 border border-slate-800/80 rounded-2xl space-y-2 text-xs">
+              <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-1">
+                Club Information
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-slate-500 block">Category</span>
+                  <span className="text-purple-300 font-semibold">{applicationModalClub.category || 'Community'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">President / Lead</span>
+                  <span className="text-slate-200 font-semibold">{applicationModalClub.presidentName || 'Student Board'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Schedule</span>
+                  <span className="text-slate-200 font-semibold">
+                    {applicationModalClub.meetingDay ? `${applicationModalClub.meetingDay}s` : 'TBA'} {applicationModalClub.meetingTime ? `at ${applicationModalClub.meetingTime}` : ''}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Meeting Venue</span>
+                  <span className="text-slate-200 font-semibold">{applicationModalClub.meetingVenue || 'Campus Venue'}</span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-slate-800/60">
+                <span className="text-slate-500 block">Description</span>
+                <p className="text-slate-300 text-[11px] leading-relaxed line-clamp-3">{applicationModalClub.description}</p>
+              </div>
+            </div>
+
+            {/* Application Form */}
+            <form onSubmit={handleConfirmJoin} className="space-y-4">
+              <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-3">
+                <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider">
+                  Applicant Student Details
+                </h4>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-500 block">Student Name</span>
+                    <span className="text-slate-200 font-semibold">
+                      {studentProfile?.firstName ? `${studentProfile.firstName} ${studentProfile.lastName || ''}` : user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Authenticated Student'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Student Email</span>
+                    <span className="text-slate-200 font-semibold">{studentProfile?.email || user?.email || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Student ID</span>
+                    <span className="text-slate-200 font-semibold">{studentProfile?.studentId || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Department</span>
+                    <span className="text-slate-200 font-semibold">{studentProfile?.department || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Course</span>
+                    <span className="text-slate-200 font-semibold">{studentProfile?.course || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Academic Year / Sem</span>
+                    <span className="text-slate-200 font-semibold">
+                      {studentProfile ? `Year ${studentProfile.year}, Sem ${studentProfile.semester}` : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-400 leading-relaxed">
+                By clicking <strong className="text-purple-400">Submit Application</strong>, your membership request will be registered in the database and submitted to club leadership.
+              </p>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setApplicationModalClub(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={joiningId === applicationModalClub.id}
+                  className="px-5 py-2.5 bg-purple-500 hover:bg-purple-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-500/20"
+                >
+                  {joiningId === applicationModalClub.id ? 'Submitting Application...' : 'Submit Application'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

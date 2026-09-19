@@ -23,6 +23,11 @@ export const fetchEvents = async (category?: string, search?: string): Promise<E
   return response.data;
 };
 
+export const fetchMyEvents = async (): Promise<EventItem[]> => {
+  const response = await api.get<EventItem[]>('/events/my-events');
+  return response.data;
+};
+
 export const fetchEventById = async (id: number): Promise<EventItem> => {
   const response = await api.get<EventItem>(`/events/${id}`);
   return response.data;

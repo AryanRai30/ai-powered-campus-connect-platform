@@ -132,6 +132,10 @@ public class FacultyEventService {
     public void deleteEvent(Long id, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Event event = getEventAndVerifyOwnership(id, faculty);
+        List<EventRegistration> registrations = registrationRepository.findByEventId(event.getId());
+        if (!registrations.isEmpty()) {
+            registrationRepository.deleteAll(registrations);
+        }
         eventRepository.delete(event);
     }
 
@@ -163,11 +167,14 @@ public class FacultyEventService {
             return EventRegistrationResponse.builder()
                     .registrationId(reg.getId())
                     .studentId(studentUser.getId())
+                    .studentIdCode(profile != null ? profile.getStudentId() : null)
                     .firstName(studentUser.getFirstName())
                     .lastName(studentUser.getLastName())
                     .email(studentUser.getEmail())
+                    .course(profile != null ? profile.getCourse() : null)
                     .department(profile != null ? profile.getDepartment() : null)
                     .year(profile != null ? profile.getYear() : null)
+                    .semester(profile != null ? profile.getSemester() : null)
                     .registeredAt(reg.getRegisteredAt())
                     .build();
         }).collect(Collectors.toList());

@@ -19,5 +19,7 @@ public interface OpportunityBookmarkRepository extends JpaRepository<Opportunity
 
     List<OpportunityBookmark> findByUserIdOrderByCreatedAtDesc(Long userId);
 
+    List<OpportunityBookmark> findByOpportunityId(Long opportunityId);
+
     void deleteByOpportunityIdAndUserId(Long opportunityId, Long userId);
 }

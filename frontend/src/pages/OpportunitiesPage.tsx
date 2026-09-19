@@ -2,17 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { OpportunityItem } from '../types/campus.types';
 import { fetchOpportunities, bookmarkOpportunity, applyForOpportunity } from '../services/campusService';
+import { studentProfileService } from '../services/studentProfileService';
+import { StudentProfileResponse } from '../types/studentProfile.types';
+import { useAuth } from '../context/AuthContext';
 
 const OPPORTUNITY_TYPES = ['All', 'INTERNSHIP', 'JOB', 'SCHOLARSHIP', 'COMPETITION', 'WORKSHOP', 'OTHER'];
 
 export const OpportunitiesPage: React.FC = () => {
+  const { user } = useAuth();
   const [opportunities, setOpportunities] = useState<OpportunityItem[]>([]);
   const [selectedType, setSelectedType] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Application, Bookmark & Student Profile States
   const [actionInProgress, setActionInProgress] = useState<number | null>(null);
   const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityItem | null>(null);
+  const [applicationModalOpp, setApplicationModalOpp] = useState<OpportunityItem | null>(null);
+  const [studentProfile, setStudentProfile] = useState<StudentProfileResponse | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const loadOpportunities = async (type: string = selectedType, search: string = searchQuery) => {
@@ -32,6 +40,18 @@ export const OpportunitiesPage: React.FC = () => {
   useEffect(() => {
     loadOpportunities(selectedType, searchQuery);
   }, [selectedType]);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await studentProfileService.getProfile();
+        setStudentProfile(profile);
+      } catch (err) {
+        console.warn('Student profile not created yet or failed to load profile data', err);
+      }
+    };
+    loadProfile();
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,34 +90,41 @@ export const OpportunitiesPage: React.FC = () => {
     return lower.startsWith('http://') || lower.startsWith('https://');
   };
 
-  const handleApply = async (opp: OpportunityItem) => {
-    setActionInProgress(opp.id);
+  const handleOpenExternalLink = (url?: string) => {
+    if (url && isValidExternalUrl(url)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleApplyClick = (opp: OpportunityItem) => {
+    if (opp.applied) return;
+    if (isValidExternalUrl(opp.applicationUrl)) {
+      // External URL: Open external link directly without calling backend API or creating DB record
+      handleOpenExternalLink(opp.applicationUrl);
+    } else {
+      // Internal application form
+      setApplicationModalOpp(opp);
+    }
+  };
+
+  const handleConfirmApplication = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!applicationModalOpp) return;
+
+    const opportunityId = applicationModalOpp.id;
+    setActionInProgress(opportunityId);
     setToastMessage(null);
-    const hasValidLink = isValidExternalUrl(opp.applicationUrl);
     try {
-      if (!opp.applied) {
-        await applyForOpportunity(opp.id);
-      }
-      setToastMessage({
-        text: hasValidLink
-          ? 'Application tracked! Opening application portal.'
-          : 'Application tracked! Note: External portal link is unavailable.',
-        type: 'success',
-      });
+      await applyForOpportunity(opportunityId);
+      setToastMessage({ text: 'Application submitted & recorded successfully!', type: 'success' });
+      setApplicationModalOpp(null);
       await loadOpportunities(selectedType, searchQuery);
-      if (selectedOpportunity && selectedOpportunity.id === opp.id) {
+      if (selectedOpportunity && selectedOpportunity.id === opportunityId) {
         setSelectedOpportunity((prev) => (prev ? { ...prev, applied: true, applicationStatus: 'APPLIED' } : null));
       }
-      if (hasValidLink && opp.applicationUrl) {
-        window.open(opp.applicationUrl, '_blank', 'noopener,noreferrer');
-      }
     } catch (err: any) {
-      if (hasValidLink && opp.applicationUrl) {
-        window.open(opp.applicationUrl, '_blank', 'noopener,noreferrer');
-      } else {
-        const msg = err.response?.data?.message || 'Application tracking failed.';
-        setToastMessage({ text: msg, type: 'error' });
-      }
+      const msg = err.response?.data?.message || 'Application submission failed.';
+      setToastMessage({ text: msg, type: 'error' });
     } finally {
       setActionInProgress(null);
     }
@@ -267,7 +294,7 @@ export const OpportunitiesPage: React.FC = () => {
                     {opp.applied && (
                       <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold rounded-lg flex items-center space-x-1">
                         <span>✓</span>
-                        <span>{opp.applicationStatus || 'Applied'}</span>
+                        <span>Already Applied</span>
                       </span>
                     )}
 
@@ -329,15 +356,15 @@ export const OpportunitiesPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => handleApply(opp)}
-                  disabled={actionInProgress === opp.id}
+                  onClick={() => handleApplyClick(opp)}
+                  disabled={opp.applied}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md flex items-center space-x-1 ${
                     opp.applied
-                      ? 'bg-slate-800 text-emerald-400 border border-emerald-500/20'
+                      ? 'bg-slate-800 text-emerald-400 border border-emerald-500/20 cursor-default'
                       : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
                   }`}
                 >
-                  <span>{opp.applied ? 'Applied / Re-open Link' : 'Apply Now'}</span>
+                  <span>{opp.applied ? 'Already Applied' : isValidExternalUrl(opp.applicationUrl) ? 'Apply Externally' : 'Apply Now'}</span>
                   <span>↗</span>
                 </button>
               </div>
@@ -415,14 +442,129 @@ export const OpportunitiesPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => handleApply(selectedOpportunity)}
-                  className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center space-x-1"
+                  onClick={() => {
+                    const target = selectedOpportunity;
+                    setSelectedOpportunity(null);
+                    handleApplyClick(target);
+                  }}
+                  disabled={selectedOpportunity.applied}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${
+                    selectedOpportunity.applied
+                      ? 'bg-slate-800 text-emerald-400 border border-emerald-500/20 cursor-default'
+                      : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
+                  }`}
                 >
-                  <span>{selectedOpportunity.applied ? 'Applied / Re-open Link' : 'Apply Now'}</span>
+                  <span>{selectedOpportunity.applied ? 'Already Applied' : isValidExternalUrl(selectedOpportunity.applicationUrl) ? 'Apply Externally' : 'Apply Now'}</span>
                   <span>↗</span>
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dedicated Internal Opportunity Application Modal */}
+      {applicationModalOpp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+              <div>
+                <span className={`px-3 py-1 text-xs font-bold rounded-lg border ${getTypeBadgeClass(applicationModalOpp.opportunityType)}`}>
+                  Internal Opportunity Application
+                </span>
+                <h3 className="text-xl font-bold text-white mt-2">{applicationModalOpp.title}</h3>
+                <p className="text-xs text-amber-400 font-semibold">{applicationModalOpp.organization}</p>
+              </div>
+              <button
+                onClick={() => setApplicationModalOpp(null)}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Opportunity Details Summary */}
+            <div className="p-4 bg-slate-950 border border-slate-800/80 rounded-2xl space-y-2 text-xs">
+              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
+                Opportunity Summary
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-slate-500 block">Type & Location</span>
+                  <span className="text-slate-200 font-semibold">{applicationModalOpp.opportunityType || 'Opportunity'} • {applicationModalOpp.location || 'Remote'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Deadline</span>
+                  <span className="text-slate-200 font-semibold">{applicationModalOpp.deadline || 'Open'}</span>
+                </div>
+                {applicationModalOpp.skills && (
+                  <div className="col-span-2">
+                    <span className="text-slate-500 block">Required Skills</span>
+                    <span className="text-slate-200 font-semibold truncate">{applicationModalOpp.skills}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Internal Application Form */}
+            <form onSubmit={handleConfirmApplication} className="space-y-4">
+              <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-3">
+                <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                  Applicant Student Details
+                </h4>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-500 block">Student Name</span>
+                    <span className="text-slate-200 font-semibold">
+                      {studentProfile?.firstName ? `${studentProfile.firstName} ${studentProfile.lastName || ''}` : user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Authenticated Student'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Student Email</span>
+                    <span className="text-slate-200 font-semibold">{studentProfile?.email || user?.email || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Student ID</span>
+                    <span className="text-slate-200 font-semibold">{studentProfile?.studentId || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Department</span>
+                    <span className="text-slate-200 font-semibold">{studentProfile?.department || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Course</span>
+                    <span className="text-slate-200 font-semibold">{studentProfile?.course || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Academic Year / Sem</span>
+                    <span className="text-slate-200 font-semibold">
+                      {studentProfile ? `Year ${studentProfile.year}, Sem ${studentProfile.semester}` : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-400 leading-relaxed">
+                By clicking <strong className="text-amber-400">Submit Application</strong>, your application will be submitted and tracked under your personal profile on Campus Connect.
+              </p>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setApplicationModalOpp(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionInProgress === applicationModalOpp.id}
+                  className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-500/20"
+                >
+                  {actionInProgress === applicationModalOpp.id ? 'Submitting Application...' : 'Submit Application'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

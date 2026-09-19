@@ -118,6 +118,18 @@ public class EventService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public List<EventResponse> getMyEvents(String currentUserEmail) {
+        User user = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + currentUserEmail));
+
+        List<EventRegistration> registrations = registrationRepository.findByUserIdOrderByRegisteredAtDesc(user.getId());
+
+        return registrations.stream()
+                .map(reg -> mapToResponse(reg.getEvent(), user))
+                .collect(Collectors.toList());
+    }
+
     private EventResponse mapToResponse(Event event, User currentUser) {
         long count = registrationRepository.countByEventId(event.getId());
         boolean isRegistered = false;

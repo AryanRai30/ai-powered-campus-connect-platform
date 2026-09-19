@@ -75,6 +75,13 @@ public class EventController {
         return ResponseEntity.ok(event);
     }
 
+    @GetMapping("/my-events")
+    public ResponseEntity<List<EventResponse>> getMyEvents(Authentication authentication) {
+        String userEmail = authentication.getName();
+        List<EventResponse> myEvents = eventService.getMyEvents(userEmail);
+        return ResponseEntity.ok(myEvents);
+    }
+
     @PostMapping("/{eventId}/register")
     public ResponseEntity<RegistrationStatusResponse> registerForEvent(
             @PathVariable Long eventId,

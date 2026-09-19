@@ -137,12 +137,13 @@ export const FacultyClubsPage: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
+    if (!id) return;
     try {
       await deleteFacultyClub(id);
       setDeleteConfirmId(null);
-      fetchClubs();
+      await fetchClubs();
     } catch (err: any) {
-      alert('Failed to delete club.');
+      alert(err.response?.data?.message || 'Failed to delete club.');
     }
   };
 
@@ -473,11 +474,15 @@ export const FacultyClubsPage: React.FC = () => {
                           {mem.firstName} {mem.lastName}
                         </div>
                         <div className="text-xs text-slate-400">{mem.email}</div>
+                        {mem.studentIdCode && (
+                          <div className="text-[11px] text-purple-400 font-mono mt-0.5">ID: {mem.studentIdCode}</div>
+                        )}
                       </div>
                       <div className="text-right text-xs text-slate-400">
-                        <div>{mem.department ? `${mem.department} (Yr ${mem.year})` : 'N/A'}</div>
-                        <div className="text-[10px] text-slate-500">
-                          Joined {new Date(mem.joinedAt).toLocaleDateString()}
+                        <div>{mem.department || 'N/A'} {mem.course ? `(${mem.course})` : ''}</div>
+                        <div>{mem.year ? `Yr ${mem.year}` : ''} {mem.semester ? `Sem ${mem.semester}` : ''}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">
+                          Joined {new Date(mem.joinedAt).toLocaleString()}
                         </div>
                       </div>
                     </div>

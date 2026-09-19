@@ -21,17 +21,20 @@ public class FacultyOpportunityService {
 
     private final OpportunityRepository opportunityRepository;
     private final com.campusconnect.repository.OpportunityApplicationRepository applicationRepository;
+    private final com.campusconnect.repository.OpportunityBookmarkRepository bookmarkRepository;
     private final com.campusconnect.repository.StudentProfileRepository profileRepository;
     private final UserRepository userRepository;
 
     public FacultyOpportunityService(
             OpportunityRepository opportunityRepository,
             com.campusconnect.repository.OpportunityApplicationRepository applicationRepository,
+            com.campusconnect.repository.OpportunityBookmarkRepository bookmarkRepository,
             com.campusconnect.repository.StudentProfileRepository profileRepository,
             UserRepository userRepository
     ) {
         this.opportunityRepository = opportunityRepository;
         this.applicationRepository = applicationRepository;
+        this.bookmarkRepository = bookmarkRepository;
         this.profileRepository = profileRepository;
         this.userRepository = userRepository;
     }
@@ -127,6 +130,17 @@ public class FacultyOpportunityService {
     public void deleteOpportunity(Long id, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Opportunity opportunity = getOpportunityAndVerifyOwnership(id, faculty);
+
+        List<com.campusconnect.entity.OpportunityApplication> apps = applicationRepository.findByOpportunityId(opportunity.getId());
+        if (!apps.isEmpty()) {
+            applicationRepository.deleteAll(apps);
+        }
+
+        List<com.campusconnect.entity.OpportunityBookmark> bookmarks = bookmarkRepository.findByOpportunityId(opportunity.getId());
+        if (!bookmarks.isEmpty()) {
+            bookmarkRepository.deleteAll(bookmarks);
+        }
+
         opportunityRepository.delete(opportunity);
     }
 
@@ -169,6 +183,7 @@ public class FacultyOpportunityService {
                     .course(profile != null ? profile.getCourse() : null)
                     .department(profile != null ? profile.getDepartment() : null)
                     .year(profile != null ? profile.getYear() : null)
+                    .semester(profile != null ? profile.getSemester() : null)
                     .applicationStatus(app.getStatus())
                     .appliedAt(app.getAppliedAt())
                     .build();

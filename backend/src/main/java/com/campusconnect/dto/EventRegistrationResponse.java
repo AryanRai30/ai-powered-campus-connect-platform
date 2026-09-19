@@ -15,10 +15,13 @@ public class EventRegistrationResponse {
 
     private Long registrationId;
     private Long studentId;
+    private String studentIdCode;
     private String firstName;
     private String lastName;
     private String email;
+    private String course;
     private String department;
     private String year;
+    private String semester;
     private LocalDateTime registeredAt;
 }

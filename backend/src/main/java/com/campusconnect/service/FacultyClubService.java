@@ -132,6 +132,10 @@ public class FacultyClubService {
     public void deleteClub(Long id, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Club club = getClubAndVerifyOwnership(id, faculty);
+        List<ClubMembership> memberships = membershipRepository.findByClubId(club.getId());
+        if (!memberships.isEmpty()) {
+            membershipRepository.deleteAll(memberships);
+        }
         clubRepository.delete(club);
     }
 
@@ -165,11 +169,14 @@ public class FacultyClubService {
             return ClubMemberResponse.builder()
                     .membershipId(mem.getId())
                     .studentId(studentUser.getId())
+                    .studentIdCode(profile != null ? profile.getStudentId() : null)
                     .firstName(studentUser.getFirstName())
                     .lastName(studentUser.getLastName())
                     .email(studentUser.getEmail())
+                    .course(profile != null ? profile.getCourse() : null)
                     .department(profile != null ? profile.getDepartment() : null)
                     .year(profile != null ? profile.getYear() : null)
+                    .semester(profile != null ? profile.getSemester() : null)
                     .joinedAt(mem.getJoinedAt())
                     .build();
         }).collect(Collectors.toList());

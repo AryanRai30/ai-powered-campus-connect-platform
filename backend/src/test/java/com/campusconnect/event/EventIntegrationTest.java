@@ -80,4 +80,14 @@ public class EventIntegrationTest {
                 .isInstanceOf(EventAlreadyRegisteredException.class)
                 .hasMessageContaining("Student is already registered for this event.");
     }
+
+    @Test
+    @DisplayName("Should fetch my registered events for authenticated student")
+    void shouldFetchMyEventsRegisteredByStudent() {
+        eventService.registerForEvent(testEvent.getId(), studentEmail);
+        List<EventResponse> myEvents = eventService.getMyEvents(studentEmail);
+        assertThat(myEvents).hasSize(1);
+        assertThat(myEvents.get(0).getId()).isEqualTo(testEvent.getId());
+        assertThat(myEvents.get(0).isRegistered()).isTrue();
+    }
 }

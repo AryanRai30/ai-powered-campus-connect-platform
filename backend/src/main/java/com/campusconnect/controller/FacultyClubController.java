@@ -61,6 +61,9 @@ public class FacultyClubController {
             @PathVariable Long id,
             Authentication authentication
     ) {
+        if (authentication == null || authentication.getName() == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Full authentication is required to access this resource");
+        }
         clubService.deleteClub(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }

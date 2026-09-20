@@ -28,17 +28,20 @@ public class FacultyClubService {
     private final ClubMembershipRepository membershipRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public FacultyClubService(
             ClubRepository clubRepository,
             ClubMembershipRepository membershipRepository,
             StudentProfileRepository studentProfileRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            NotificationService notificationService
     ) {
         this.clubRepository = clubRepository;
         this.membershipRepository = membershipRepository;
         this.studentProfileRepository = studentProfileRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     private User getAuthenticatedFaculty(String email) {
@@ -87,6 +90,9 @@ public class FacultyClubService {
                 .build();
 
         Club saved = clubRepository.save(club);
+        if (Boolean.TRUE.equals(saved.getPublished())) {
+            notifyTargetedStudentsIfPublished(saved);
+        }
         return mapToResponse(saved);
     }
 
@@ -107,6 +113,7 @@ public class FacultyClubService {
     public FacultyClubResponse updateClub(Long id, FacultyClubRequest request, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Club club = getClubAndVerifyOwnership(id, faculty);
+        boolean wasPublished = Boolean.TRUE.equals(club.getPublished());
 
         if (!club.getName().equalsIgnoreCase(request.getName().trim()) && clubRepository.existsByName(request.getName().trim())) {
             throw new IllegalArgumentException("A club with this name already exists: " + request.getName());
@@ -126,6 +133,9 @@ public class FacultyClubService {
         club.setUpdatedBy(faculty);
 
         Club updated = clubRepository.save(club);
+        if (!wasPublished && Boolean.TRUE.equals(updated.getPublished())) {
+            notifyTargetedStudentsIfPublished(updated);
+        }
         return mapToResponse(updated);
     }
 
@@ -142,9 +152,13 @@ public class FacultyClubService {
     public FacultyClubResponse publishClub(Long id, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Club club = getClubAndVerifyOwnership(id, faculty);
+        boolean wasPublished = Boolean.TRUE.equals(club.getPublished());
         club.setPublished(true);
         club.setUpdatedBy(faculty);
         Club updated = clubRepository.save(club);
+        if (!wasPublished) {
+            notifyTargetedStudentsIfPublished(updated);
+        }
         return mapToResponse(updated);
     }
 
@@ -155,6 +169,37 @@ public class FacultyClubService {
         club.setUpdatedBy(faculty);
         Club updated = clubRepository.save(club);
         return mapToResponse(updated);
+    }
+
+    private void notifyTargetedStudentsIfPublished(Club club) {
+        if (club == null || !Boolean.TRUE.equals(club.getPublished())) {
+            return;
+        }
+        List<User> eligibleStudents = userRepository.findStudentUsers(
+                true,
+                club.getDepartment(),
+                null,
+                null,
+                null,
+                null
+        );
+
+        Long facultyId = club.getCreatedBy() != null ? club.getCreatedBy().getId() : null;
+        List<User> recipients = eligibleStudents.stream()
+                .filter(u -> facultyId == null || !facultyId.equals(u.getId()))
+                .collect(Collectors.toList());
+
+        if (!recipients.isEmpty()) {
+            notificationService.createNotifications(
+                    recipients,
+                    "New club available",
+                    "A new club has been published: " + club.getName(),
+                    com.campusconnect.entity.NotificationType.CLUB,
+                    "CLUB",
+                    club.getId(),
+                    "/clubs"
+            );
+        }
     }
 
     @Transactional(readOnly = true)

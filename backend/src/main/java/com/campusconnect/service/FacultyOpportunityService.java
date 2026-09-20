@@ -24,19 +24,22 @@ public class FacultyOpportunityService {
     private final com.campusconnect.repository.OpportunityBookmarkRepository bookmarkRepository;
     private final com.campusconnect.repository.StudentProfileRepository profileRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public FacultyOpportunityService(
             OpportunityRepository opportunityRepository,
             com.campusconnect.repository.OpportunityApplicationRepository applicationRepository,
             com.campusconnect.repository.OpportunityBookmarkRepository bookmarkRepository,
             com.campusconnect.repository.StudentProfileRepository profileRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            NotificationService notificationService
     ) {
         this.opportunityRepository = opportunityRepository;
         this.applicationRepository = applicationRepository;
         this.bookmarkRepository = bookmarkRepository;
         this.profileRepository = profileRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     private User getAuthenticatedFaculty(String email) {
@@ -85,6 +88,9 @@ public class FacultyOpportunityService {
                 .build();
 
         Opportunity saved = opportunityRepository.save(opportunity);
+        if (Boolean.TRUE.equals(saved.getPublished())) {
+            notifyTargetedStudentsIfPublished(saved);
+        }
         return mapToResponse(saved);
     }
 
@@ -105,6 +111,7 @@ public class FacultyOpportunityService {
     public FacultyOpportunityResponse updateOpportunity(Long id, FacultyOpportunityRequest request, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Opportunity opportunity = getOpportunityAndVerifyOwnership(id, faculty);
+        boolean wasPublished = Boolean.TRUE.equals(opportunity.getPublished());
 
         opportunity.setTitle(request.getTitle());
         opportunity.setDescription(request.getDescription());
@@ -124,6 +131,9 @@ public class FacultyOpportunityService {
         }
 
         Opportunity updated = opportunityRepository.save(opportunity);
+        if (!wasPublished && Boolean.TRUE.equals(updated.getPublished())) {
+            notifyTargetedStudentsIfPublished(updated);
+        }
         return mapToResponse(updated);
     }
 
@@ -147,8 +157,12 @@ public class FacultyOpportunityService {
     public FacultyOpportunityResponse publishOpportunity(Long id, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Opportunity opportunity = getOpportunityAndVerifyOwnership(id, faculty);
+        boolean wasPublished = Boolean.TRUE.equals(opportunity.getPublished());
         opportunity.setPublished(true);
         Opportunity updated = opportunityRepository.save(opportunity);
+        if (!wasPublished) {
+            notifyTargetedStudentsIfPublished(updated);
+        }
         return mapToResponse(updated);
     }
 
@@ -158,6 +172,40 @@ public class FacultyOpportunityService {
         opportunity.setPublished(false);
         Opportunity updated = opportunityRepository.save(opportunity);
         return mapToResponse(updated);
+    }
+
+    private void notifyTargetedStudentsIfPublished(Opportunity opportunity) {
+        if (opportunity == null || !Boolean.TRUE.equals(opportunity.getPublished())) {
+            return;
+        }
+        String yearStr = opportunity.getTargetYear() != null ? String.valueOf(opportunity.getTargetYear()) : null;
+        String semStr = opportunity.getTargetSemester() != null ? String.valueOf(opportunity.getTargetSemester()) : null;
+
+        List<User> eligibleStudents = userRepository.findStudentUsers(
+                true,
+                opportunity.getTargetDepartment(),
+                opportunity.getTargetCourse(),
+                yearStr,
+                semStr,
+                null
+        );
+
+        Long facultyId = opportunity.getCreatedBy() != null ? opportunity.getCreatedBy().getId() : null;
+        List<User> recipients = eligibleStudents.stream()
+                .filter(u -> facultyId == null || !facultyId.equals(u.getId()))
+                .collect(Collectors.toList());
+
+        if (!recipients.isEmpty()) {
+            notificationService.createNotifications(
+                    recipients,
+                    "New opportunity available",
+                    "A new opportunity has been published: " + opportunity.getTitle(),
+                    com.campusconnect.entity.NotificationType.OPPORTUNITY,
+                    "OPPORTUNITY",
+                    opportunity.getId(),
+                    "/opportunities"
+            );
+        }
     }
 
     @Transactional(readOnly = true)

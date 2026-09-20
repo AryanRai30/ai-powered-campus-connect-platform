@@ -32,17 +32,20 @@ public class OpportunityService {
     private final OpportunityBookmarkRepository bookmarkRepository;
     private final OpportunityApplicationRepository applicationRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public OpportunityService(
             OpportunityRepository opportunityRepository,
             OpportunityBookmarkRepository bookmarkRepository,
             OpportunityApplicationRepository applicationRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            NotificationService notificationService
     ) {
         this.opportunityRepository = opportunityRepository;
         this.bookmarkRepository = bookmarkRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -161,6 +164,23 @@ public class OpportunityService {
                 .build();
 
         OpportunityApplication saved = applicationRepository.save(application);
+
+        boolean isExternalLink = opportunity.getApplicationUrl() != null && !opportunity.getApplicationUrl().trim().isEmpty();
+        if (!isExternalLink) {
+            User facultyOwner = opportunity.getCreatedBy();
+            if (facultyOwner != null && !facultyOwner.getId().equals(user.getId())) {
+                String studentName = (user.getFirstName() + " " + user.getLastName()).trim();
+                notificationService.createNotification(
+                        facultyOwner,
+                        "New opportunity application",
+                        studentName + " applied for " + opportunity.getTitle(),
+                        com.campusconnect.entity.NotificationType.OPPORTUNITY_APPLICATION,
+                        "OPPORTUNITY",
+                        opportunity.getId(),
+                        "/faculty/opportunities"
+                );
+            }
+        }
 
         return OpportunityApplicationStatusResponse.builder()
                 .opportunityId(opportunityId)

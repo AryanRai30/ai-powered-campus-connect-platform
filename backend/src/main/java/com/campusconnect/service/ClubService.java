@@ -27,15 +27,18 @@ public class ClubService {
     private final ClubRepository clubRepository;
     private final ClubMembershipRepository membershipRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public ClubService(
             ClubRepository clubRepository,
             ClubMembershipRepository membershipRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            NotificationService notificationService
     ) {
         this.clubRepository = clubRepository;
         this.membershipRepository = membershipRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -73,6 +76,20 @@ public class ClubService {
                 .build();
 
         ClubMembership saved = membershipRepository.save(membership);
+
+        User facultyOwner = club.getCreatedBy();
+        if (facultyOwner != null && !facultyOwner.getId().equals(user.getId())) {
+            String studentName = (user.getFirstName() + " " + user.getLastName()).trim();
+            notificationService.createNotification(
+                    facultyOwner,
+                    "New club application",
+                    studentName + " has applied to join " + club.getName(),
+                    com.campusconnect.entity.NotificationType.CLUB_MEMBERSHIP,
+                    "CLUB",
+                    club.getId(),
+                    "/faculty/clubs"
+            );
+        }
 
         return ClubMembershipStatusResponse.builder()
                 .clubId(clubId)

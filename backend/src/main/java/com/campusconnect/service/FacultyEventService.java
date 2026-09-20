@@ -28,17 +28,20 @@ public class FacultyEventService {
     private final EventRegistrationRepository registrationRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public FacultyEventService(
             EventRepository eventRepository,
             EventRegistrationRepository registrationRepository,
             StudentProfileRepository studentProfileRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            NotificationService notificationService
     ) {
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
         this.studentProfileRepository = studentProfileRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     private User getAuthenticatedFaculty(String email) {
@@ -86,6 +89,9 @@ public class FacultyEventService {
                 .build();
 
         Event saved = eventRepository.save(event);
+        if (Boolean.TRUE.equals(saved.getPublished())) {
+            notifyTargetedStudentsIfPublished(saved);
+        }
         return mapToResponse(saved);
     }
 
@@ -106,6 +112,7 @@ public class FacultyEventService {
     public FacultyEventResponse updateEvent(Long id, FacultyEventRequest request, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Event event = getEventAndVerifyOwnership(id, faculty);
+        boolean wasPublished = Boolean.TRUE.equals(event.getPublished());
 
         event.setTitle(request.getTitle());
         event.setDescription(request.getDescription());
@@ -126,6 +133,9 @@ public class FacultyEventService {
         }
 
         Event updated = eventRepository.save(event);
+        if (!wasPublished && Boolean.TRUE.equals(updated.getPublished())) {
+            notifyTargetedStudentsIfPublished(updated);
+        }
         return mapToResponse(updated);
     }
 
@@ -142,8 +152,12 @@ public class FacultyEventService {
     public FacultyEventResponse publishEvent(Long id, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Event event = getEventAndVerifyOwnership(id, faculty);
+        boolean wasPublished = Boolean.TRUE.equals(event.getPublished());
         event.setPublished(true);
         Event updated = eventRepository.save(event);
+        if (!wasPublished) {
+            notifyTargetedStudentsIfPublished(updated);
+        }
         return mapToResponse(updated);
     }
 
@@ -153,6 +167,40 @@ public class FacultyEventService {
         event.setPublished(false);
         Event updated = eventRepository.save(event);
         return mapToResponse(updated);
+    }
+
+    private void notifyTargetedStudentsIfPublished(Event event) {
+        if (event == null || !Boolean.TRUE.equals(event.getPublished())) {
+            return;
+        }
+        String yearStr = event.getTargetYear() != null ? String.valueOf(event.getTargetYear()) : null;
+        String semStr = event.getTargetSemester() != null ? String.valueOf(event.getTargetSemester()) : null;
+
+        List<User> eligibleStudents = userRepository.findStudentUsers(
+                true,
+                event.getTargetDepartment(),
+                event.getTargetCourse(),
+                yearStr,
+                semStr,
+                null
+        );
+
+        Long facultyId = event.getCreatedBy() != null ? event.getCreatedBy().getId() : null;
+        List<User> recipients = eligibleStudents.stream()
+                .filter(u -> facultyId == null || !facultyId.equals(u.getId()))
+                .collect(Collectors.toList());
+
+        if (!recipients.isEmpty()) {
+            notificationService.createNotifications(
+                    recipients,
+                    "New event available",
+                    "A new event has been published: " + event.getTitle(),
+                    com.campusconnect.entity.NotificationType.EVENT,
+                    "EVENT",
+                    event.getId(),
+                    "/events"
+            );
+        }
     }
 
     @Transactional(readOnly = true)

@@ -23,15 +23,18 @@ public class FacultyResourceService {
     private final AcademicResourceRepository resourceRepository;
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;
 
     public FacultyResourceService(
             AcademicResourceRepository resourceRepository,
             UserRepository userRepository,
-            FileStorageService fileStorageService
+            FileStorageService fileStorageService,
+            NotificationService notificationService
     ) {
         this.resourceRepository = resourceRepository;
         this.userRepository = userRepository;
         this.fileStorageService = fileStorageService;
+        this.notificationService = notificationService;
     }
 
     private User getAuthenticatedFaculty(String email) {
@@ -97,6 +100,9 @@ public class FacultyResourceService {
                 .build();
 
         AcademicResource saved = resourceRepository.save(resource);
+        if (Boolean.TRUE.equals(saved.getPublished())) {
+            notifyTargetedStudentsIfPublished(saved);
+        }
         return mapToResponse(saved);
     }
 
@@ -121,6 +127,7 @@ public class FacultyResourceService {
     public FacultyResourceResponse updateResource(Long id, FacultyResourceRequest request, MultipartFile file, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         AcademicResource resource = getResourceAndVerifyOwnership(id, faculty);
+        boolean wasPublished = Boolean.TRUE.equals(resource.getPublished());
 
         if (file != null && !file.isEmpty()) {
             if (resource.getStoredFileName() != null) {
@@ -156,6 +163,9 @@ public class FacultyResourceService {
         }
 
         AcademicResource updated = resourceRepository.save(resource);
+        if (!wasPublished && Boolean.TRUE.equals(updated.getPublished())) {
+            notifyTargetedStudentsIfPublished(updated);
+        }
         return mapToResponse(updated);
     }
 
@@ -173,8 +183,12 @@ public class FacultyResourceService {
     public FacultyResourceResponse publishResource(Long id, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         AcademicResource resource = getResourceAndVerifyOwnership(id, faculty);
+        boolean wasPublished = Boolean.TRUE.equals(resource.getPublished());
         resource.setPublished(true);
         AcademicResource updated = resourceRepository.save(resource);
+        if (!wasPublished) {
+            notifyTargetedStudentsIfPublished(updated);
+        }
         return mapToResponse(updated);
     }
 
@@ -184,6 +198,40 @@ public class FacultyResourceService {
         resource.setPublished(false);
         AcademicResource updated = resourceRepository.save(resource);
         return mapToResponse(updated);
+    }
+
+    private void notifyTargetedStudentsIfPublished(AcademicResource resource) {
+        if (resource == null || !Boolean.TRUE.equals(resource.getPublished())) {
+            return;
+        }
+        String yearStr = resource.getTargetYear() != null ? String.valueOf(resource.getTargetYear()) : null;
+        String semStr = resource.getTargetSemester() != null ? String.valueOf(resource.getTargetSemester()) : null;
+
+        List<User> eligibleStudents = userRepository.findStudentUsers(
+                true,
+                resource.getTargetDepartment(),
+                resource.getTargetCourse(),
+                yearStr,
+                semStr,
+                null
+        );
+
+        Long facultyId = resource.getCreatedBy() != null ? resource.getCreatedBy().getId() : null;
+        List<User> recipients = eligibleStudents.stream()
+                .filter(u -> facultyId == null || !facultyId.equals(u.getId()))
+                .collect(Collectors.toList());
+
+        if (!recipients.isEmpty()) {
+            notificationService.createNotifications(
+                    recipients,
+                    "New academic resource",
+                    "A new resource has been published: " + resource.getTitle(),
+                    com.campusconnect.entity.NotificationType.RESOURCE,
+                    "RESOURCE",
+                    resource.getId(),
+                    "/resources"
+            );
+        }
     }
 
     private String deriveResourceTypeFromContentType(String contentType, String filename) {

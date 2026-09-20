@@ -28,6 +28,7 @@ public class AnnouncementIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        announcementRepository.deleteAll();
         announcementRepository.save(Announcement.builder()
                 .title("Older Notice")
                 .content("Older announcement content")

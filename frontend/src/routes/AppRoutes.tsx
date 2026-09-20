@@ -8,6 +8,7 @@ import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import DashboardPage from '../pages/DashboardPage';
 import ProfilePage from '../pages/ProfilePage';
+import NotificationsPage from '../pages/NotificationsPage';
 import EventsPage from '../pages/EventsPage';
 import MyEventsPage from '../pages/MyEventsPage';
 import AnnouncementsPage from '../pages/AnnouncementsPage';
@@ -148,6 +149,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute allowedRoles={['FACULTY']}>
               <FacultyStudentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
             </ProtectedRoute>
           }
         />

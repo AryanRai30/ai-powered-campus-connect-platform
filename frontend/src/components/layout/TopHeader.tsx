@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { MenuIcon, BellIcon } from '../common/Icons';
+import notificationService from '../../services/notificationService';
+import NotificationDropdown from './NotificationDropdown';
 
 interface TopHeaderProps {
   onMobileOpen: () => void;
 }
 
 const getBreadcrumbTitle = (pathname: string): string => {
+  if (pathname.includes('/notifications')) return 'Notification Center';
+
   if (pathname.includes('/faculty/dashboard')) return 'Faculty Portal';
   if (pathname.includes('/faculty/resources')) return 'Faculty Academic Resources';
   if (pathname.includes('/faculty/announcements')) return 'Faculty Bulletins & Announcements';
@@ -38,12 +42,33 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onMobileOpen }) => {
   const { user } = useAuth();
   const location = useLocation();
   const pageTitle = getBreadcrumbTitle(location.pathname);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
   const userRoles = user?.roles || [];
   const isAdmin = userRoles.some((r) => ['ADMIN', 'SUPER_ADMIN', 'CLUB_ADMIN'].includes(r));
   const isFaculty = !isAdmin && userRoles.includes('FACULTY');
   const primaryRole = isAdmin ? 'ADMIN' : isFaculty ? 'FACULTY' : 'STUDENT';
   const fullName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User';
+
+  const refreshUnreadCount = () => {
+    if (user) {
+      notificationService
+        .getUnreadCount()
+        .then((res) => {
+          setUnreadCount(res.unreadCount || 0);
+        })
+        .catch(() => {
+          setUnreadCount(0);
+        });
+    } else {
+      setUnreadCount(0);
+    }
+  };
+
+  useEffect(() => {
+    refreshUnreadCount();
+  }, [user, location.pathname]);
 
   const getRoleBadgeStyle = (role?: string) => {
     switch (role) {
@@ -84,14 +109,31 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onMobileOpen }) => {
           {primaryRole}
         </span>
 
-        {/* Notifications Icon */}
-        <button
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors relative"
-          title="Notifications"
-        >
-          <BellIcon size={20} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-600 rounded-full ring-2 ring-white" />
-        </button>
+        {/* Notifications Icon & Popover Container */}
+        <div className="relative">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            aria-expanded={isDropdownOpen}
+            aria-label="Notifications"
+            className={`p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors relative ${
+              isDropdownOpen ? 'bg-slate-100 text-slate-700' : ''
+            }`}
+            title="Notifications"
+          >
+            <BellIcon size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          <NotificationDropdown
+            isOpen={isDropdownOpen}
+            onClose={() => setIsDropdownOpen(false)}
+            onNotificationsUpdated={refreshUnreadCount}
+          />
+        </div>
 
         {/* User Pill */}
         {user && (
@@ -109,3 +151,4 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onMobileOpen }) => {
     </header>
   );
 };
+

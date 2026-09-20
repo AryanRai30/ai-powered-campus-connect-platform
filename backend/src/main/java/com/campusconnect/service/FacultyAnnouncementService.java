@@ -22,10 +22,16 @@ public class FacultyAnnouncementService {
 
     private final AnnouncementRepository announcementRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    public FacultyAnnouncementService(AnnouncementRepository announcementRepository, UserRepository userRepository) {
+    public FacultyAnnouncementService(
+            AnnouncementRepository announcementRepository,
+            UserRepository userRepository,
+            NotificationService notificationService
+    ) {
         this.announcementRepository = announcementRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     private User getAuthenticatedFaculty(String email) {
@@ -69,6 +75,9 @@ public class FacultyAnnouncementService {
                 .build();
 
         Announcement saved = announcementRepository.save(announcement);
+        if (Boolean.TRUE.equals(saved.getPublished())) {
+            notifyTargetedStudentsIfPublished(saved);
+        }
         return mapToResponse(saved);
     }
 
@@ -89,6 +98,7 @@ public class FacultyAnnouncementService {
     public FacultyAnnouncementResponse updateAnnouncement(Long id, FacultyAnnouncementRequest request, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Announcement announcement = getAnnouncementAndVerifyOwnership(id, faculty);
+        boolean wasPublished = Boolean.TRUE.equals(announcement.getPublished());
 
         announcement.setTitle(request.getTitle());
         announcement.setContent(request.getContent());
@@ -102,6 +112,9 @@ public class FacultyAnnouncementService {
         }
 
         Announcement updated = announcementRepository.save(announcement);
+        if (!wasPublished && Boolean.TRUE.equals(updated.getPublished())) {
+            notifyTargetedStudentsIfPublished(updated);
+        }
         return mapToResponse(updated);
     }
 
@@ -114,9 +127,13 @@ public class FacultyAnnouncementService {
     public FacultyAnnouncementResponse publishAnnouncement(Long id, String facultyEmail) {
         User faculty = getAuthenticatedFaculty(facultyEmail);
         Announcement announcement = getAnnouncementAndVerifyOwnership(id, faculty);
+        boolean wasPublished = Boolean.TRUE.equals(announcement.getPublished());
         announcement.setPublished(true);
         announcement.setPublishedAt(LocalDateTime.now());
         Announcement updated = announcementRepository.save(announcement);
+        if (!wasPublished) {
+            notifyTargetedStudentsIfPublished(updated);
+        }
         return mapToResponse(updated);
     }
 
@@ -126,6 +143,40 @@ public class FacultyAnnouncementService {
         announcement.setPublished(false);
         Announcement updated = announcementRepository.save(announcement);
         return mapToResponse(updated);
+    }
+
+    private void notifyTargetedStudentsIfPublished(Announcement announcement) {
+        if (announcement == null || !Boolean.TRUE.equals(announcement.getPublished())) {
+            return;
+        }
+        String yearStr = announcement.getTargetYear() != null ? String.valueOf(announcement.getTargetYear()) : null;
+        String semStr = announcement.getTargetSemester() != null ? String.valueOf(announcement.getTargetSemester()) : null;
+
+        List<User> eligibleStudents = userRepository.findStudentUsers(
+                true,
+                announcement.getTargetDepartment(),
+                announcement.getTargetCourse(),
+                yearStr,
+                semStr,
+                null
+        );
+
+        Long facultyId = announcement.getCreatedBy() != null ? announcement.getCreatedBy().getId() : null;
+        List<User> recipients = eligibleStudents.stream()
+                .filter(u -> facultyId == null || !facultyId.equals(u.getId()))
+                .collect(Collectors.toList());
+
+        if (!recipients.isEmpty()) {
+            notificationService.createNotifications(
+                    recipients,
+                    "New announcement",
+                    "A new announcement has been published: " + announcement.getTitle(),
+                    com.campusconnect.entity.NotificationType.ANNOUNCEMENT,
+                    "ANNOUNCEMENT",
+                    announcement.getId(),
+                    "/announcements"
+            );
+        }
     }
 
     private FacultyAnnouncementResponse mapToResponse(Announcement a) {

@@ -14,6 +14,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   GraduationCapIcon,
+  BellIcon,
 } from '../common/Icons';
 
 interface SidebarProps {
@@ -49,6 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   if (isStudent) {
     navItems = [
       { label: 'Dashboard', path: '/dashboard', icon: DashboardIcon },
+      { label: 'Notifications', path: '/notifications', icon: BellIcon },
       { label: 'Resources', path: '/resources', icon: BookOpenIcon },
       { label: 'Bulletins', path: '/announcements', icon: MegaphoneIcon },
       { label: 'Events', path: '/events', icon: CalendarIcon },
@@ -58,6 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   } else if (isFaculty) {
     navItems = [
       { label: 'Dashboard', path: '/faculty/dashboard', icon: DashboardIcon },
+      { label: 'Notifications', path: '/notifications', icon: BellIcon },
       { label: 'Resources', path: '/faculty/resources', icon: BookOpenIcon },
       { label: 'Bulletins', path: '/faculty/announcements', icon: MegaphoneIcon },
       { label: 'Events', path: '/faculty/events', icon: CalendarIcon },
@@ -68,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   } else if (isAdmin) {
     navItems = [
       { label: 'Dashboard', path: '/admin/dashboard', icon: DashboardIcon },
+      { label: 'Notifications', path: '/notifications', icon: BellIcon },
       { label: 'Faculty', path: '/admin/faculty', icon: UsersIcon },
       { label: 'Students', path: '/admin/students', icon: GraduationCapIcon },
       { label: 'Profile', path: '/profile', icon: UserIcon },

@@ -27,15 +27,18 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventRegistrationRepository registrationRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public EventService(
             EventRepository eventRepository,
             EventRegistrationRepository registrationRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            NotificationService notificationService
     ) {
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -92,6 +95,20 @@ public class EventService {
                 .build();
 
         EventRegistration saved = registrationRepository.save(registration);
+
+        User facultyOwner = event.getCreatedBy();
+        if (facultyOwner != null && !facultyOwner.getId().equals(user.getId())) {
+            String studentName = (user.getFirstName() + " " + user.getLastName()).trim();
+            notificationService.createNotification(
+                    facultyOwner,
+                    "New event registration",
+                    studentName + " registered for your event: " + event.getTitle(),
+                    com.campusconnect.entity.NotificationType.EVENT_REGISTRATION,
+                    "EVENT",
+                    event.getId(),
+                    "/faculty/events"
+            );
+        }
 
         return RegistrationStatusResponse.builder()
                 .eventId(eventId)

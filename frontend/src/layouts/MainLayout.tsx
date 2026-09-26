@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Sidebar } from '../components/layout/Sidebar';
 import { TopHeader } from '../components/layout/TopHeader';
+import { FloatingAiWidget } from '../components/ai/FloatingAiWidget';
 import { XIcon } from '../components/common/Icons';
 
 interface MainLayoutProps {
@@ -90,6 +91,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           Campus Connect Platform &copy; {new Date().getFullYear()} — Academic Architecture Foundation
         </footer>
       </div>
+
+      {/* Floating AI Assistant Widget */}
+      <FloatingAiWidget />
     </div>
   );
 };

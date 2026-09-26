@@ -27,6 +27,7 @@ import FacultyStudentsPage from '../pages/FacultyStudentsPage';
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 import AdminFacultyPage from '../pages/admin/AdminFacultyPage';
 import AdminStudentsPage from '../pages/admin/AdminStudentsPage';
+import AiAssistantPage from '../pages/AiAssistantPage';
 import ProtectedRoute from './ProtectedRoute';
 
 const RootRedirect: React.FC = () => {
@@ -89,6 +90,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <StudentDashboardGuard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-assistant"
+          element={
+            <ProtectedRoute>
+              <AiAssistantPage />
             </ProtectedRoute>
           }
         />

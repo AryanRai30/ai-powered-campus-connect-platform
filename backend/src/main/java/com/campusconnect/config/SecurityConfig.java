@@ -73,6 +73,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/events", "/api/announcements", "/api/clubs", "/api/resources", "/api/opportunities").hasAnyRole("FACULTY", "CLUB_ADMIN", "SUPER_ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/events/**", "/api/announcements/**", "/api/clubs/**", "/api/resources/**", "/api/opportunities/**").hasAnyRole("FACULTY", "CLUB_ADMIN", "SUPER_ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/events/**", "/api/announcements/**", "/api/clubs/**", "/api/resources/**", "/api/opportunities/**").hasAnyRole("FACULTY", "CLUB_ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/api/ai/**").authenticated()
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

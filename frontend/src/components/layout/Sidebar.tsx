@@ -15,6 +15,7 @@ import {
   ChevronRightIcon,
   GraduationCapIcon,
   BellIcon,
+  SparklesIcon,
 } from '../common/Icons';
 
 interface SidebarProps {
@@ -50,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   if (isStudent) {
     navItems = [
       { label: 'Dashboard', path: '/dashboard', icon: DashboardIcon },
+      { label: 'AI Assistant', path: '/ai-assistant', icon: SparklesIcon },
       { label: 'Notifications', path: '/notifications', icon: BellIcon },
       { label: 'Resources', path: '/resources', icon: BookOpenIcon },
       { label: 'Bulletins', path: '/announcements', icon: MegaphoneIcon },

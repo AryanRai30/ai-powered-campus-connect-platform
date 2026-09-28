@@ -24,6 +24,7 @@ const getBreadcrumbTitle = (pathname: string): string => {
   if (pathname.includes('/admin/faculty')) return 'Admin Faculty Management';
   if (pathname.includes('/admin/students')) return 'Admin Student Management';
 
+  if (pathname.includes('/campus-search')) return 'Semantic Campus Search';
   if (pathname.includes('/dashboard')) return 'Student Dashboard';
   if (pathname.includes('/resources')) return 'Academic Resources';
   if (pathname.includes('/announcements')) return 'Bulletins & Announcements';

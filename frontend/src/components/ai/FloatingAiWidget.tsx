@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { sendAiChatMessage, getAiErrorMessage } from '../../services/aiService';
+import { sendAiAssistantQuery, getAiErrorMessage } from '../../services/aiService';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import {
   SparklesIcon,
@@ -69,11 +69,11 @@ export const FloatingAiWidget: React.FC = () => {
     setError(null);
 
     try {
-      const res = await sendAiChatMessage(prompt);
+      const res = await sendAiAssistantQuery(prompt);
       const aiMessage: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: res.response || 'No response generated.',
+        text: res.answer || 'No response generated.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, aiMessage]);

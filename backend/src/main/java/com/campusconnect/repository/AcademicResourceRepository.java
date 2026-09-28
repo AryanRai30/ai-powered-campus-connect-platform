@@ -18,6 +18,8 @@ public interface AcademicResourceRepository extends JpaRepository<AcademicResour
 
     List<AcademicResource> findAllByCreatedByOrderByIdDesc(User createdBy);
 
+    List<AcademicResource> findByPublishedTrueAndActiveTrue();
+
     Optional<AcademicResource> findByIdAndCreatedBy(Long id, User createdBy);
 
     long countByCreatedBy(User createdBy);

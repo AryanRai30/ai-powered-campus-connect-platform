@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { sendAiChatMessage, checkAiHealth, getAiErrorMessage } from '../services/aiService';
+import { sendAiAssistantQuery, checkAiHealth, getAiErrorMessage } from '../services/aiService';
 import { MarkdownRenderer } from '../components/ai/MarkdownRenderer';
 import {
   SparklesIcon,
@@ -81,11 +81,11 @@ export const AiAssistantPage: React.FC = () => {
     setError(null);
 
     try {
-      const res = await sendAiChatMessage(promptText);
+      const res = await sendAiAssistantQuery(promptText);
       const aiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: res.response || 'No response returned from Gemini.',
+        text: res.answer || 'No response returned from Gemini.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, aiMsg]);

@@ -22,6 +22,8 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
 
     List<Club> findAllByCreatedByOrderByIdDesc(User createdBy);
 
+    List<Club> findByPublishedTrueAndActiveTrue();
+
     Optional<Club> findByIdAndCreatedBy(Long id, User createdBy);
 
     long countByCreatedBy(User createdBy);

@@ -18,6 +18,8 @@ public interface OpportunityRepository extends JpaRepository<Opportunity, Long> 
 
     List<Opportunity> findAllByCreatedByOrderByIdDesc(User createdBy);
 
+    List<Opportunity> findByPublishedTrueAndActiveTrue();
+
     Optional<Opportunity> findByIdAndCreatedBy(Long id, User createdBy);
 
     long countByCreatedBy(User createdBy);

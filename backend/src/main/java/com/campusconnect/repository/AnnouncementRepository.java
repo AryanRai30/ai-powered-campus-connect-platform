@@ -18,6 +18,8 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
 
     List<Announcement> findAllByCreatedByOrderByIdDesc(User createdBy);
 
+    List<Announcement> findByPublishedTrueAndActiveTrue();
+
     Optional<Announcement> findByIdAndCreatedBy(Long id, User createdBy);
 
     long countByCreatedBy(User createdBy);

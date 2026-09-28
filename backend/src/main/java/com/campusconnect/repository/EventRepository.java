@@ -18,6 +18,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     List<Event> findAllByCreatedByOrderByIdDesc(User createdBy);
 
+    List<Event> findByPublishedTrueAndActiveTrue();
+
     Optional<Event> findByIdAndCreatedBy(Long id, User createdBy);
 
     long countByCreatedBy(User createdBy);

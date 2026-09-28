@@ -65,6 +65,7 @@ public class SecurityConfig {
 
                 .requestMatchers("/api/protected/faculty").hasRole("FACULTY")
                 .requestMatchers("/api/faculty/**").hasRole("FACULTY")
+                .requestMatchers(HttpMethod.POST, "/api/admin/rag/sync").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "CLUB_ADMIN")
                 .requestMatchers("/api/protected/admin").hasAnyRole("ADMIN", "SUPER_ADMIN", "CLUB_ADMIN")
                 // Student Permitted Actions (Register, Join, Bookmark, Apply)

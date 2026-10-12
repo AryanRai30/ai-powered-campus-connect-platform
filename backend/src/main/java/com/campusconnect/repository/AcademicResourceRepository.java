@@ -24,6 +24,8 @@ public interface AcademicResourceRepository extends JpaRepository<AcademicResour
 
     long countByCreatedBy(User createdBy);
 
+    long countByPublishedTrueAndActiveTrue();
+
     @Query("SELECT r FROM AcademicResource r WHERE " +
            "r.published = true AND r.active = true AND " +
            "(:category IS NULL OR :category = '' OR LOWER(r.category) = LOWER(:category)) AND " +

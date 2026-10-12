@@ -52,6 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   if (isStudent) {
     navItems = [
       { label: 'Dashboard', path: '/dashboard', icon: DashboardIcon },
+      { label: 'Activity Analytics', path: '/analytics', icon: SparklesIcon },
       { label: 'Campus Search', path: '/campus-search', icon: SearchIcon },
       { label: 'AI Assistant', path: '/ai-assistant', icon: SparklesIcon },
       { label: 'Notifications', path: '/notifications', icon: BellIcon },
@@ -64,6 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   } else if (isFaculty) {
     navItems = [
       { label: 'Dashboard', path: '/faculty/dashboard', icon: DashboardIcon },
+      { label: 'Activity Analytics', path: '/analytics', icon: SparklesIcon },
       { label: 'Notifications', path: '/notifications', icon: BellIcon },
       { label: 'Resources', path: '/faculty/resources', icon: BookOpenIcon },
       { label: 'Bulletins', path: '/faculty/announcements', icon: MegaphoneIcon },
@@ -75,6 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   } else if (isAdmin) {
     navItems = [
       { label: 'Dashboard', path: '/admin/dashboard', icon: DashboardIcon },
+      { label: 'Activity Analytics', path: '/analytics', icon: SparklesIcon },
       { label: 'Notifications', path: '/notifications', icon: BellIcon },
       { label: 'Faculty', path: '/admin/faculty', icon: UsersIcon },
       { label: 'Students', path: '/admin/students', icon: GraduationCapIcon },

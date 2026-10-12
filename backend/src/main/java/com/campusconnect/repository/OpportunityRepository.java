@@ -24,6 +24,8 @@ public interface OpportunityRepository extends JpaRepository<Opportunity, Long> 
 
     long countByCreatedBy(User createdBy);
 
+    long countByPublishedTrueAndActiveTrue();
+
     @Query("SELECT o FROM Opportunity o WHERE " +
            "o.published = true AND o.active = true AND " +
            "(:opportunityType IS NULL OR :opportunityType = '' OR UPPER(o.opportunityType) = UPPER(:opportunityType)) AND " +

@@ -24,6 +24,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     long countByCreatedBy(User createdBy);
 
+    long countByPublishedTrueAndActiveTrue();
+
     @Query("SELECT e FROM Event e WHERE " +
            "e.published = true AND e.active = true AND " +
            "(:category IS NULL OR :category = '' OR LOWER(e.category) = LOWER(:category)) AND " +

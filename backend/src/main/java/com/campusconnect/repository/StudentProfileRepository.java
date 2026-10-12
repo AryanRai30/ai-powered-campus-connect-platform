@@ -22,6 +22,9 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
 
     boolean existsByStudentIdAndUserIdNot(String studentId, Long userId);
 
+    @org.springframework.data.jpa.repository.Query("SELECT sp.department, COUNT(sp) FROM StudentProfile sp WHERE sp.department IS NOT NULL AND sp.department <> '' GROUP BY sp.department")
+    java.util.List<Object[]> countStudentsByDepartment();
+
     @org.springframework.data.jpa.repository.Query("""
         SELECT sp FROM StudentProfile sp
         WHERE (:dept IS NULL OR :dept = '' OR LOWER(sp.department) = LOWER(:dept))

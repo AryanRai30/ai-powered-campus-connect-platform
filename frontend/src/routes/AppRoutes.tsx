@@ -29,6 +29,7 @@ import AdminFacultyPage from '../pages/admin/AdminFacultyPage';
 import AdminStudentsPage from '../pages/admin/AdminStudentsPage';
 import AiAssistantPage from '../pages/AiAssistantPage';
 import CampusSearchPage from '../pages/CampusSearchPage';
+import ActivityAnalyticsPage from '../pages/ActivityAnalyticsPage';
 import ProtectedRoute from './ProtectedRoute';
 
 const RootRedirect: React.FC = () => {
@@ -107,6 +108,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <CampusSearchPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <ActivityAnalyticsPage />
             </ProtectedRoute>
           }
         />

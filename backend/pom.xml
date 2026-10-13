@@ -28,6 +28,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Spring Boot Starter Actuator for production health monitoring -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Spring Data JPA for object relational mapping -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,22 +1,69 @@
 import axios from 'axios';
-import { HealthStatus } from '../types/api.types';
+import type { HealthStatus } from '../types/api.types';
 
-// Centralized API base URL resolver supporting VITE_API_URL with localhost fallback
-export const getApiBaseUrl = (): string => {
+/**
+ * Centralized API base URL resolver and normalizer.
+ * Guarantees that:
+ * 1. An optional input string or environment variable (VITE_API_URL / VITE_API_BASE_URL) is read.
+ * 2. Fallback to 'http://localhost:8080' is applied for local dev.
+ * 3. All trailing slashes and any trailing '/api' occurrences are removed.
+ * 4. Exactly one '/api' path segment is present at the end of the base URL.
+ */
+export const normalizeApiBaseUrl = (rawUrl?: string): string => {
   const envUrl = (
-    import.meta.env.VITE_API_URL ||
-    import.meta.env.VITE_API_BASE_URL ||
+    rawUrl ||
+    (typeof import.meta !== 'undefined' && import.meta.env
+      ? import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
+      : '') ||
     'http://localhost:8080'
   ).trim();
 
-  // Strip trailing slashes
-  const trimmed = envUrl.replace(/\/+$/, '');
+  // Strip all trailing slashes
+  let cleanUrl = envUrl.replace(/\/+$/, '');
 
-  // Ensure /api path prefix is present
-  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+  // Strip any trailing '/api' occurrences to prevent duplicate '/api/api'
+  while (cleanUrl.endsWith('/api')) {
+    cleanUrl = cleanUrl.slice(0, -4).replace(/\/+$/, '');
+  }
+
+  return `${cleanUrl}/api`;
 };
 
+export const getApiBaseUrl = (rawUrl?: string): string => normalizeApiBaseUrl(rawUrl);
+
 export const BASE_URL = getApiBaseUrl();
+
+/**
+ * Normalizes any request URL path to strip leading duplicate '/api' or 'api/' segments,
+ * ensuring the final request path has '/api' exactly once via Axios baseURL.
+ */
+export const normalizeRequestPath = (url?: string): string => {
+  if (!url) return '';
+  let normalized = url.trim();
+
+  // Strip all leading duplicate '/api/' or 'api/' segments
+  while (
+    normalized.startsWith('/api/') ||
+    normalized.startsWith('api/') ||
+    normalized === '/api' ||
+    normalized === 'api'
+  ) {
+    if (normalized.startsWith('/api/')) {
+      normalized = normalized.slice(4);
+    } else if (normalized.startsWith('api/')) {
+      normalized = normalized.slice(4);
+    } else if (normalized === '/api' || normalized === 'api') {
+      normalized = '';
+      break;
+    }
+  }
+
+  if (normalized.length > 0 && !normalized.startsWith('/')) {
+    normalized = `/${normalized}`;
+  }
+
+  return normalized;
+};
 
 /**
  * Global Axios Instance for API requests
@@ -31,7 +78,7 @@ const api = axios.create({
 
 /**
  * Request Interceptor to attach JWT Bearer Token automatically
- * and normalize relative request URLs to avoid duplicate '/api/api' paths
+ * and normalize relative request URLs to guarantee no duplicate '/api/api' paths
  */
 api.interceptors.request.use(
   (config) => {
@@ -39,9 +86,9 @@ api.interceptors.request.use(
       config.headers = {} as any;
     }
 
-    // Normalize URL path to prevent accidental '/api/api' duplication
-    if (config.url && config.url.startsWith('/api/')) {
-      config.url = config.url.replace(/^\/api/, '');
+    // Normalize URL path to prevent duplicate '/api/api' paths under all circumstances
+    if (config.url) {
+      config.url = normalizeRequestPath(config.url);
     }
 
     // If request payload is FormData, remove default JSON content-type to allow Axios/browser to set multipart boundary

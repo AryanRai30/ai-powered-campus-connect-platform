@@ -19,23 +19,26 @@ import java.util.stream.Collectors;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:5174}")
+    @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:5174,http://localhost:3000,https://ai-powered-campus-connect-platform.vercel.app}")
     private String allowedOrigins;
 
     private List<String> getOriginsList() {
         return Arrays.stream(allowedOrigins.split(","))
                      .map(String::trim)
                      .filter(s -> !s.isEmpty())
+                     .map(origin -> origin.replaceAll("/+$", ""))
+                     .distinct()
                      .collect(Collectors.toList());
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         List<String> origins = getOriginsList();
-        registry.addMapping("/api/**")
+        registry.addMapping("/**")
                 .allowedOrigins(origins.toArray(new String[0]))
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                .allowedHeaders("*")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                .allowedHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers")
+                .exposedHeaders("Authorization", "Content-Disposition")
                 .allowCredentials(true)
                 .maxAge(3600);
     }
@@ -43,14 +46,17 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(getOriginsList());
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        List<String> origins = getOriginsList();
+        configuration.setAllowedOrigins(origins);
+        configuration.setAllowedOriginPatterns(origins);
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", "*"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }

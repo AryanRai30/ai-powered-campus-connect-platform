@@ -7,6 +7,8 @@ import com.campusconnect.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,23 +26,53 @@ public class DataInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Environment environment;
 
     public DataInitializer(
             RoleRepository roleRepository,
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            Environment environment
     ) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.environment = environment;
     }
 
     @Override
     @Transactional
     public void run(String... args) {
         seedRoles();
-        seedDevFacultyUser();
-        seedDevAdminUser();
+        if (shouldSeedDevUsers()) {
+            seedDevFacultyUser();
+            seedDevAdminUser();
+        } else {
+            logger.info("DataInitializer: Skipping development user accounts in production environment.");
+        }
+    }
+
+    /**
+     * Determines whether development seed accounts (faculty.dev, admin.dev) should be initialized.
+     * Automatically disabled in production profile or Render cloud environment unless explicitly enabled.
+     */
+    private boolean shouldSeedDevUsers() {
+        String seedConfig = environment.getProperty("app.seed-dev-users");
+        if (seedConfig != null && !seedConfig.trim().isEmpty()) {
+            return Boolean.parseBoolean(seedConfig.trim());
+        }
+
+        // Disable automatically if prod or production profile is active
+        if (environment.acceptsProfiles(Profiles.of("prod", "production"))) {
+            return false;
+        }
+
+        // Disable automatically when running in Render cloud runtime environment
+        if ("true".equalsIgnoreCase(environment.getProperty("RENDER"))) {
+            return false;
+        }
+
+        return true;
     }
 
     private void seedRoles() {

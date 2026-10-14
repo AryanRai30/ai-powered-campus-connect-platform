@@ -1,0 +1,15 @@
+target/
+*.log
+.env
+uploads/
+storage/
+snapshots/
+qdrant-bin/
+query
+.qdrant-initialized
+.git
+.gitignore
+.vscode/
+.idea/
+*.iml
+.DS_Store

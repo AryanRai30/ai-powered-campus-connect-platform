@@ -1,8 +1,22 @@
 import axios from 'axios';
 import { HealthStatus } from '../types/api.types';
 
-// Centralized base URL configured via environment variable
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+// Centralized API base URL resolver supporting VITE_API_URL with localhost fallback
+export const getApiBaseUrl = (): string => {
+  const envUrl = (
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    'http://localhost:8080'
+  ).trim();
+
+  // Strip trailing slashes
+  const trimmed = envUrl.replace(/\/+$/, '');
+
+  // Ensure /api path prefix is present
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+};
+
+export const BASE_URL = getApiBaseUrl();
 
 /**
  * Global Axios Instance for API requests
@@ -12,16 +26,22 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 15000,
 });
 
 /**
  * Request Interceptor to attach JWT Bearer Token automatically
+ * and normalize relative request URLs to avoid duplicate '/api/api' paths
  */
 api.interceptors.request.use(
   (config) => {
     if (!config.headers) {
       config.headers = {} as any;
+    }
+
+    // Normalize URL path to prevent accidental '/api/api' duplication
+    if (config.url && config.url.startsWith('/api/')) {
+      config.url = config.url.replace(/^\/api/, '');
     }
 
     // If request payload is FormData, remove default JSON content-type to allow Axios/browser to set multipart boundary

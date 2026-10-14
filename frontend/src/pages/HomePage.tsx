@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { checkBackendHealth } from '../services/api';
+import { checkBackendHealth, BASE_URL } from '../services/api';
 import { HealthStatus } from '../types/api.types';
 
 export const HomePage: React.FC = () => {
@@ -74,7 +74,7 @@ export const HomePage: React.FC = () => {
             <p className="font-semibold mb-1">Connection Note:</p>
             <p>{error}</p>
             <p className="text-[11px] text-slate-400 mt-2">
-              Ensure Spring Boot backend is running at <code className="text-slate-300">http://localhost:8080</code>
+              Ensure Spring Boot backend is reachable at <code className="text-slate-300">{BASE_URL}</code>
             </p>
           </div>
         )}
